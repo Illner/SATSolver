@@ -145,9 +145,12 @@ class NodeTree:
     Node representation
     """
 
+    ID = 1
+
     # Constructor
     def __init__(self, value):
         """
+        int id
         string value
         NodeTree left_node
         NodeTree right_node
@@ -155,6 +158,8 @@ class NodeTree:
         boolean has_right_node
         """
 
+        self.__id = NodeTree.ID
+        NodeTree.ID += 1
         self.__value = value
         self.left_node = None
         self.right_node = None
@@ -168,7 +173,7 @@ class NodeTree:
         return ((self.left_node is None) and (self.right_node is None))
 
     def __str__(self):
-        temp = "Value: " + self.value
+        temp = "Value: " + self.value + ", id: " + str(self.id)
 
         temp += ", Left node: "
         if (self.has_left_node):
@@ -252,3 +257,11 @@ class NodeTree:
         """
 
         return self.__has_right_node
+
+    @property
+    def id(self):
+        """
+        id getter
+        """
+
+        return self.__id
