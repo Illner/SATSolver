@@ -13,6 +13,7 @@ class TseitinEncoding:
         NodeTree root
         boolean one_sided
         Dictionary<int, (int, string)> variable_dictionary
+        Dictionary<int, string> original_variable_dictionary
         int number_of_clauses
         string DIMACS_format
         int id
@@ -21,6 +22,7 @@ class TseitinEncoding:
         self.__root = derivation_tree.root
         self.__one_sided = one_sided
         self.__variable_dictionary = {}
+        self.__original_variable_dictionary = {}
         self.__number_of_clauses = 0
         self.__DIMACS_format = ""
         self.__id = 0
@@ -41,8 +43,10 @@ class TseitinEncoding:
             # Original variable
             else:
                 original_variable += value_2 + "-" + str(value_1) + " "
+                self.__original_variable_dictionary[value_1] = value_2
 
-        self.__DIMACS_format = original_variable + "\n"
+        self.__DIMACS_format = "c root: {0}".format(l) + "\n"
+        self.__DIMACS_format += original_variable + "\n"
         self.__DIMACS_format += fresh_variable + "\n"
         self.__DIMACS_format += "p cnf {0} {1}".format(self.number_of_variables(), self.number_of_clauses) + "\n"
         self.__DIMACS_format += DIMACS_format
@@ -161,3 +165,11 @@ class TseitinEncoding:
         """
 
         return self.__number_of_clauses
+
+    @property
+    def original_variable_dictionary(self):
+        """
+        original_variable_dictionary getter
+        """
+
+        return self.__original_variable_dictionary

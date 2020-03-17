@@ -4,11 +4,11 @@ class MissingOperandDerivationTreeException(Exception):
     """
 
     # Constructor
-    def __init__(self, message):
-        super().__init__(message)
-
-    def __init__(self):
-        super().__init__("An operand is missing in the prefix expression")
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("An operand is missing in the prefix expression")
+        else:
+            super().__init__(message)
 
 class MissingOperatorDerivationTreeException(Exception):
     """
@@ -16,19 +16,30 @@ class MissingOperatorDerivationTreeException(Exception):
     """
 
     # Constructor
-    def __init__(self, message):
-        super().__init__(message)
-
-    def __init__(self):
-        super().__init__("An operator is missing in the prefix expression")
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("An operator is missing in the prefix expression")
+        else:
+            super().__init__(message)
 
 class InvalidOperatorTseitinEncodingException(Exception):
     """
-    Invalid operator in derivative tree
+    Invalid operator in derivation tree
     """
 
-    def __init__(self, message):
-        super().__init__("Invalid operator: " + message)
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Invalid operator")
+        else:
+            super().__init__("Invalid operator: " + message)
 
-    def __init__(self):
-        super().__init__("Invalid operator")
+class InvalidArgumentsFormula2CNFException(Exception):
+    """
+    Invalid arguments
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Invalid arguments\nformula2cnf.py [-one_sided] [input_path [output_path]]")
+        else: 
+            super().__init__(message)

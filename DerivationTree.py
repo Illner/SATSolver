@@ -3,7 +3,7 @@ import MyException
 
 class DerivationTree:
     """
-    Class for building derivation tree from prefixed expression
+    Class for building derivation tree from prefix expression
     Throws MissingOperandDerivationTreeException or MissingOperatorDerivationTreeException if the prefix expression is invalid
     """
 
@@ -36,7 +36,7 @@ class DerivationTree:
         prefix_expression = prefix_expression.replace('(', '')
         prefix_expression = prefix_expression.replace(')', '')
 
-        prefix_expression_array = prefix_expression.split(' ')
+        prefix_expression_array = prefix_expression.split()
 
         for i in reversed(range(len(prefix_expression_array))):
             x = prefix_expression_array[i]
@@ -86,7 +86,7 @@ class DerivationTree:
                 node = NodeTree(x)
                 stack.append(node)
         
-        # Operand is missing
+        # Operator is missing
         if (len(stack) != 1):
             raise MyException.MissingOperatorDerivationTreeException()
 

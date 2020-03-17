@@ -24,6 +24,9 @@
     <Compile Include="DerivationTree.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="formula2cnf.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="LogicalSignEnum.py">
       <SubType>Code</SubType>
     </Compile>
