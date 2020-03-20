@@ -1,7 +1,7 @@
 import copy
 import MyException
 
-class Cnf:
+class CNF:
     """
     CNF formula representation
     """
@@ -108,6 +108,11 @@ class Cnf:
         return list(filter(lambda x: (x not in partial_assignment) and (-x not in partial_assignment), self.__variable_list))
 
     def unit_propagation_adjacency_list(self, partial_assignment, check_partial_assignment = True):
+        """
+        Do unit propagation
+        Returns True if CNF after unit propagation is unsatisfied, otherwise False
+        """
+
         if (check_partial_assignment and not(self.__check_partial_assignment(partial_assignment))):
             raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(partial_assignment))
 
@@ -182,6 +187,19 @@ class Cnf:
         clause = self.__cnf[clause_id]
         return list(filter(lambda x: (x not in partial_assignment) and (-x not in partial_assignment), clause))
 
+    def original_variable_name(self, variable):
+        """
+        Returns an original name of variable
+        If variable does not have an original name, returns None
+        """
+
+        variable = abs(variable)
+
+        if (variable in self.__original_variable_dictionary):
+            return self.__original_variable_dictionary[variable]
+
+        return None
+
     # Property
     @property
     def cnf(self):
@@ -222,17 +240,3 @@ class Cnf:
         """
 
         return self.__literal_list
-
-    @property
-    def original_variable_name(self, variable):
-        """
-        Returns an original name of variable
-        If variable does not have an original name, returns None
-        """
-
-        variable = abs(variable)
-
-        if (variable in self.__original_variable_dictionary):
-            return self.__original_variable_dictionary[variable]
-
-        return None

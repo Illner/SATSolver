@@ -21,10 +21,13 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Cnf.py">
+    <Compile Include="CNF.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DerivationTree.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DPLL.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="formula2cnf.py">

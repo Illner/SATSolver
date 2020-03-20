@@ -14,6 +14,7 @@ class TseitinEncoding:
         boolean one_sided
         Dictionary<int, (int, string)> variable_dictionary
         Dictionary<int, string> original_variable_dictionary
+        Dictionary<string, int> mapping_original_variable_dictionary
         int number_of_clauses
         string DIMACS_format
         int id
@@ -23,6 +24,7 @@ class TseitinEncoding:
         self.__one_sided = one_sided
         self.__variable_dictionary = {}
         self.__original_variable_dictionary = {}
+        self.__mapping_original_variable_dictionary = {}
         self.__number_of_clauses = 0
         self.__DIMACS_format = ""
         self.__id = 0
@@ -113,7 +115,7 @@ class TseitinEncoding:
 
         # We have already visited the node and created fresh variable
         if (node.id in self.__variable_dictionary):
-            return  self.__variable_dictionary[node.id][0]
+            return self.__variable_dictionary[node.id][0]
 
         l = 0
 
@@ -123,7 +125,11 @@ class TseitinEncoding:
             self.__variable_dictionary[node.id] = (l, "")
         # Node contains an operand
         else:
-            l = self.__get_id()
+            if (node.value in self.__mapping_original_variable_dictionary):
+                l = self.__mapping_original_variable_dictionary[node.value]
+            else:
+                l = self.__get_id()
+                self.__mapping_original_variable_dictionary[node.value] = l
             self.__variable_dictionary[node.id] = (l, node.value)
 
         return l
