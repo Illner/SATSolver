@@ -1,25 +1,16 @@
 from DerivationTree import DerivationTree
 from LogicalSignEnum import LogicalSignEnum
 from TseitinEncoding import TseitinEncoding
+from Cnf import Cnf
 import MyException
 
 text = "(or a1 (and a2 (and a3 (and a4 a5))))"
 
 derivationTree = DerivationTree(text)
-# print(derivationTree)
 tseitinEncoding = TseitinEncoding(derivationTree, False)
-print(tseitinEncoding)
-
-print("----")
-nevim = tseitinEncoding.original_variable_dictionary
-for i in nevim:
-    print(str(i) + ": " + nevim[i])
-
-# try:
-#     derivationTree = DerivationTree(text)
-#     print(derivationTree)
-#     print(derivationTree.prefix_expression)
-# except MyException.MissingOperandDerivationTreeException as e:
-#     print(e)
-# except MyException.MissingOperatorDerivationTreeException as e:
-#     print(e)
+DIMACS_format = str(tseitinEncoding)
+print(DIMACS_format)
+cnf = Cnf(DIMACS_format, tseitinEncoding.original_variable_dictionary)
+print("number_of_clauses: " + str(cnf.number_of_clauses))
+print("number_of_variables: " + str(cnf.number_of_variables))
+print(cnf.cnf)
