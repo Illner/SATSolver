@@ -35,7 +35,7 @@ class InvalidOperatorTseitinEncodingException(Exception):
 
 class InvalidArgumentsFormula2CNFException(Exception):
     """
-    Invalid arguments
+    Invalid arguments - formula2cnf.py
     """
 
     def __init__(self, message = ""):
@@ -73,4 +73,15 @@ class SomethingWrongException(Exception):
 
     def __init__(self, message):
         if (message == ""):
+            super().__init__(message)
+
+class InvalidArgumentsDPLLTaskException(Exception):
+    """
+    Invalid arguments - dpllTask.py
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Invalid arguments\ndpllTask.py [-DIMACS | -SMT-LIB] input_path")
+        else: 
             super().__init__(message)

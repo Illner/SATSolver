@@ -30,6 +30,9 @@
     <Compile Include="DPLL.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="dpllTask.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="formula2cnf.py">
       <SubType>Code</SubType>
     </Compile>
