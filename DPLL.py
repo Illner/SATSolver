@@ -1,3 +1,4 @@
+import time
 import copy
 import random
 
@@ -5,13 +6,17 @@ class DPLL:
     # Constructor
     def __init__(self, cnf):
         """
+        int time
         List<List<int>> cnf
+        List<int> model2
         Dictionary<string, boolean> model
         int number_of_decisions
         int number_of_steps_of_unit_propagation
         """
-
+        
+        self.__time = None
         self.__cnf = cnf
+        self.__model2 = []
         self.__model = {}
         self.__number_of_decisions = 0
         self.__number_of_steps_of_unit_propagation = 0
@@ -27,7 +32,11 @@ class DPLL:
         if (self.__model != {}):
             return self.__model
 
+        start = time.time()
         assignment = self.__DPLL_recursive([])
+        end = time.time()
+
+        self.__time = (end - start)
 
         # CNF is unsatisfiable
         if (assignment == None):
@@ -35,17 +44,18 @@ class DPLL:
             return None
 
         assignment.sort(key=abs) 
+        self.__model2 = copy.deepcopy(assignment)
 
         for l in assignment:
             variable_name = self.__cnf.original_variable_name(l)
             if (variable_name is None):
                 variable_name = str(abs(l))
             else:
-                variable_name += " (" + str(l) + ")"
+                variable_name += " (" + str(abs(l)) + ")"
 
             self.__model[variable_name] = (l > 0)
 
-        return self.__model
+        return self.__model2
 
     def __DPLL_recursive(self, partial_assignment):
         partial_assignment_copy = copy.deepcopy(partial_assignment)
@@ -105,3 +115,11 @@ class DPLL:
         """
 
         return self.__number_of_steps_of_unit_propagation
+
+    @property
+    def time(self):
+        """
+        time getter
+        """
+
+        return self.__time

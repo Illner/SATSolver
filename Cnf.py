@@ -38,6 +38,10 @@ class CNF:
             if (line.startswith("c")):
                 continue
 
+            # ?? end of file ??
+            if (line.startswith("%")):
+                break;
+
             # P line
             elif (line.startswith("p")):
                 temp_array = line.split()

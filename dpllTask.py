@@ -53,6 +53,10 @@ try:
     dpll = DPLL(cnf)
     result = dpll.DPLL()
 
+    print("Total CPU time: " + str(dpll.time) + "s")
+    print("Number of decisions: " + str(dpll.number_of_decisions))
+    print("Number of steps of unit propagation: " + str(dpll.number_of_steps_of_unit_propagation))
+
     if (result is None):
         print("-----")
         print("UNSAT")
