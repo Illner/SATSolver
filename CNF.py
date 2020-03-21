@@ -1,6 +1,6 @@
-
 import copy
 import MyException
+from UnitPropagationEnum import UnitPropagationEnum
 
 class CNF:
     """
@@ -8,7 +8,7 @@ class CNF:
     """
 
     # Constructor
-    def __init__(self, DIMACS_format, original_variable_dictionary = {}):
+    def __init__(self, DIMACS_format, original_variable_dictionary = {}, unit_propagation_enum = UnitPropagationEnum.AdjacencyList):
         """
         List<List<int>> cnf
         int number_of_clauses
@@ -19,6 +19,7 @@ class CNF:
         List<int> unit_clause_list
         Dictionary<int, int> counter_dictionary
         List<int> contradiction_clause_list
+        UnitPropagationEnum unit_propagation_enum
         Dictionary<int, string> original_variable_dictionary
         Dictionary<int, List<int>> adjacency_list_dictionary
         """
@@ -28,10 +29,12 @@ class CNF:
         self.__number_of_variables = 0
         self.__partial_assignment = []
         self.__unit_clause_list = []
-        self.__counter_dictionary = {}
         self.__contradiction_clause_list = []
-        self.__adjacency_list_dictionary = {}
+        self.__unit_propagation_enum = unit_propagation_enum
         self.__original_variable_dictionary = copy.deepcopy(original_variable_dictionary)
+        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+            self.__counter_dictionary = {}
+            self.__adjacency_list_dictionary = {}
 
         self.__create_cnf(DIMACS_format)
 
@@ -77,7 +80,8 @@ class CNF:
                         clause.append(x)
 
                         # Set adjacency list
-                        self.__update_adjacency_list(x, clause_id)
+                        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+                            self.__update_adjacency_list(x, clause_id)
                 except ValueError:
                     raise MyException.InvalidDIMACSFormatException("Invalid clause line")
 
@@ -85,9 +89,10 @@ class CNF:
                 clause_id += 1
 
                 # Set counter
-                self.__counter_dictionary[clause_id] = len(clause)
-                if (len(clause) == 1):
-                    self.__unit_clause_list.append(clause_id)
+                if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+                    self.__counter_dictionary[clause_id] = len(clause)
+                    if (len(clause) == 1):
+                        self.__unit_clause_list.append(clause_id)
     
     def __update_adjacency_list(self, variable, clause_id):
         variable = abs(variable)
@@ -125,7 +130,15 @@ class CNF:
 
         return list(filter(lambda x: (x not in self.__partial_assignment) and (-x not in self.__partial_assignment), self.__variable_list))
 
-    def unit_propagation_adjacency_list(self):
+    def unit_propagation(self):
+        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+            return self.__unit_propagation_adjacency_list()
+        if (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
+            return self.__unit_propagation_watched_literals()
+
+        raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
+
+    def __unit_propagation_adjacency_list(self):
         """
         Do unit propagation
         Uses counter-model adjacency list
@@ -141,13 +154,22 @@ class CNF:
 
         return (len(self.__contradiction_clause_list) != 0)
 
+    # TODO
+    def __unit_propagation_watched_literals(self):
+        pass
+
     def add_literal_to_partial_assignment(self, literal):
         self.__partial_assignment.append(literal)
 
         if (not(self.__check_partial_assignment())):
             raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment))
 
-        self.__update_counter(literal)
+        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+            self.__update_counter(literal)
+        elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
+            self.__update_watched_literals(literal)
+        else:
+            raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
     def remove_literal_from_partial_assignment(self, literal):
         # Check if the literal exists in the partial assignment
@@ -156,7 +178,12 @@ class CNF:
 
         self.__partial_assignment.remove(literal)
 
-        self.__update_counter(literal)
+        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+            self.__update_counter(literal)
+        elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
+            self.__update_watched_literals(literal)
+        else:
+            raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
     def __update_counter(self, literal):
         for clause_id in self.__adjacency_list_dictionary[abs(literal)]:
@@ -183,6 +210,10 @@ class CNF:
                     self.__unit_clause_list.append(clause_id)
                 else:
                     self.__counter_dictionary[clause_id] = len(undefinied_literal_list)
+
+    # TODO
+    def __update_watched_literals(self, literal):
+        pass
 
     def __is_clause_satisfied(self, clause_id):
         clause = self.__cnf[clause_id]

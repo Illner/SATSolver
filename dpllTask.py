@@ -4,6 +4,7 @@ from CNF import CNF
 from DPLL import DPLL
 from DerivationTree import DerivationTree
 from TseitinEncoding import TseitinEncoding
+from UnitPropagationEnum import UnitPropagationEnum
 
 # Variable
 cnf = None
@@ -48,7 +49,7 @@ try:
         tseitinEncoding = TseitinEncoding(derivationTree)
         cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary)
     else:
-        cnf = CNF(input_formula)
+        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList)
 
     dpll = DPLL(cnf)
     result = dpll.DPLL()
@@ -71,10 +72,8 @@ except (MyException.InvalidArgumentsDPLLTaskException,
         MyException.MissingOperandDerivationTreeException, 
         MyException.MissingOperatorDerivationTreeException, 
         MyException.InvalidDIMACSFormatException,
+        MyException.UndefinedUnitPropagationCnfException,
         FileExistsError) as e:
     print(e)
 except FileNotFoundError:
     print("Input file does not exist")
-except Exception as e:
-    print("Something wrong")
-    print(e)

@@ -62,7 +62,7 @@ class DPLL:
         before_partial_assignment = copy.deepcopy(self.__cnf.partial_assignment)
 
         # Unit propagation
-        is_unsatisfied = self.__cnf.unit_propagation_adjacency_list()
+        is_unsatisfied = self.__cnf.unit_propagation()
         
         after_partial_assignment = self.__cnf.partial_assignment
         self.__increment_number_of_steps_of_unit_propagation(len(after_partial_assignment) - len(before_partial_assignment))

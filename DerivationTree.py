@@ -1,5 +1,5 @@
-from LogicalSignEnum import LogicalSignEnum
 import MyException
+from LogicalSignEnum import LogicalSignEnum
 
 class DerivationTree:
     """

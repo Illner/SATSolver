@@ -66,6 +66,17 @@ class InvalidLiteralInPartialAssignmentCnfException(Exception):
         else:
             super().__init__("Invalid literal in the partial assignment\n" + message)
 
+class UndefinedUnitPropagationCnfException(Exception):
+    """
+    Undefined unit propagation
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Undefined unit propagation")
+        else:
+            super().__init__("Undefined unit propagation: " + message)
+
 class SomethingWrongException(Exception):
     """
     Something wrong
