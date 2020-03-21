@@ -14,6 +14,10 @@ class CNF:
         int number_of_variables
         List<int> literal_list
         List<int> variable_list
+        List<int> partial_assignment_list
+        List<int> unit_clause_list
+        Dictionary<int, int> counter_dictionary
+        List<int> contradiction_clause_list
         Dictionary<int, string> original_variable_dictionary
         Dictionary<int, List<int>> adjacency_list_dictionary
         """
@@ -21,6 +25,10 @@ class CNF:
         self.__cnf = []
         self.__number_of_clauses = 0
         self.__number_of_variables = 0
+        self.__partial_assignment = []
+        self.__unit_clause_list = []
+        self.__counter_dictionary = {}
+        self.__contradiction_clause_list = []
         self.__adjacency_list_dictionary = {}
         self.__original_variable_dictionary = copy.deepcopy(original_variable_dictionary)
 
@@ -74,6 +82,11 @@ class CNF:
 
                 self.__cnf.append(clause)
                 clause_id += 1
+
+                # Set counter
+                self.__counter_dictionary[clause_id] = len(clause)
+                if (len(clause) == 1):
+                    self.__unit_clause_list.append(clause_id)
     
     def __update_adjacency_list(self, variable, clause_id):
         variable = abs(variable)
@@ -87,109 +100,96 @@ class CNF:
         else:
             self.__adjacency_list_dictionary[variable] = [clause_id]
 
-    def __check_partial_assignment(self, partial_assignment):
+    def __check_partial_assignment(self):
         """
         Returns True if the partial assignment is valid otherwise False
         """
 
         # Check if all literals in the partial assignment exist in the formula
-        if(not(all(x in self.__literal_list for x in partial_assignment))):
+        if(not(all(x in self.__literal_list for x in self.__partial_assignment))):
             return False
 
         # Check if the partial assignment does not contain a contradiction
-        if(not(all(-x not in partial_assignment for x in partial_assignment))):
+        if(not(all(-x not in self.__partial_assignment for x in self.__partial_assignment))):
             return False
 
         return True
 
-    def undefined_variables(self, partial_assignment, check_partial_assignment = True):
+    def undefined_variables(self):
         """
         Returns a list of variables which are undefinied in the partial assignment
         """
-        if (check_partial_assignment and not(self.__check_partial_assignment(partial_assignment))):
-            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(partial_assignment))
+        if (not(self.__check_partial_assignment())):
+            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment))
 
-        return list(filter(lambda x: (x not in partial_assignment) and (-x not in partial_assignment), self.__variable_list))
+        return list(filter(lambda x: (x not in self.__partial_assignment) and (-x not in self.__partial_assignment), self.__variable_list))
 
-    def unit_propagation_adjacency_list(self, partial_assignment, check_partial_assignment = True):
+    def unit_propagation_adjacency_list(self):
         """
         Do unit propagation
-        Returns True if CNF after unit propagation is unsatisfied, otherwise False
+        Uses counter-model adjacency list
         """
 
-        if (check_partial_assignment and not(self.__check_partial_assignment(partial_assignment))):
-            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(partial_assignment))
-
-        # Variable
-        unit_clause_list = []
-        counter_dictionary = {}
-        contradiction_clause_list = []
-
-        # Initialize lists
-        for (clause_id, clause) in enumerate(self.__cnf):
-             is_satisfied = self.__is_clause_satisfied(clause_id, partial_assignment)
-
-             # Clause is satisfied
-             if (is_satisfied):
-                 counter_dictionary[clause_id] = 0
-             else:
-                undefinied_literal_list = self.__undefinied_literal_list_for_clause(clause_id, partial_assignment)
-                # Clause is unsatisfied
-                if (len(undefinied_literal_list) == 0):
-                    counter_dictionary[clause_id] = 0
-                    contradiction_clause_list.append(clause_id)
-                # Unit clause
-                elif (len(undefinied_literal_list) == 1):
-                    counter_dictionary[clause_id] = 1
-                    unit_clause_list.append(clause_id)
-                else:
-                    counter_dictionary[clause_id] = len(undefinied_literal_list)
-
-        while (unit_clause_list):
-            clause_id = unit_clause_list.pop()
+        while (self.__unit_clause_list):
+            clause_id = self.__unit_clause_list.pop()
             clause = self.__cnf[clause_id]
-            undefinied_literal_list = self.__undefinied_literal_list_for_clause(clause_id, partial_assignment)
+            undefinied_literal_list = self.__undefinied_literal_list_for_clause(clause_id)
 
             l = undefinied_literal_list.pop()
-            partial_assignment.append(l)
+            self.add_literal_to_partial_assignment(l)
 
-            for i in self.__adjacency_list_dictionary[abs(l)]:
-                temp_counter = counter_dictionary[i]
+        return (len(self.__contradiction_clause_list) != 0)
 
-                # Clause is already satisfied or unsatisfied
-                if (temp_counter == 0):
-                    continue
+    def add_literal_to_partial_assignment(self, literal):
+        self.__partial_assignment.append(literal)
 
-                # Clause is now satisfied
-                if (self.__is_clause_satisfied(i, partial_assignment)):
-                    counter_dictionary[i] = 0
-                    if (i in unit_clause_list):
-                        unit_clause_list.remove(i)
-                    continue
+        if (not(self.__check_partial_assignment())):
+            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment))
 
-                # temp_counter -= 1
-                temp_counter -= self.__cnf[i].count(-l)
-                counter_dictionary[i] = temp_counter 
+        self.__update_counter(literal)
 
-                # Clause is now unsatisfied
-                if (temp_counter == 0):
-                    contradiction_clause_list.append(i)
-                    if (i in unit_clause_list):
-                        unit_clause_list.remove(i)
+    def remove_literal_from_partial_assignment(self, literal):
+        # Check if the literal exists in the partial assignment
+        if (literal not in self.__partial_assignment):
+            raise MyException.InvalidLiteralInPartialAssignmentCnfException("Literal '{0}' is not in '{1}'".format(literal, self.__partial_assignment))
 
+        self.__partial_assignment.remove(literal)
+
+        self.__update_counter(literal)
+
+    def __update_counter(self, literal):
+        for clause_id in self.__adjacency_list_dictionary[abs(literal)]:
+            if (clause_id in self.__contradiction_clause_list):
+                self.__contradiction_clause_list.remove(clause_id)
+
+            if (clause_id in self.__unit_clause_list):
+                self.__unit_clause_list.remove(clause_id)
+
+            is_satisfied = self.__is_clause_satisfied(clause_id)
+
+            # Clause is satisfied
+            if (is_satisfied):
+                self.__counter_dictionary[clause_id] = 0
+            else:
+                undefinied_literal_list = self.__undefinied_literal_list_for_clause(clause_id)
+                # Clause is unsatisfied
+                if (len(undefinied_literal_list) == 0):
+                    self.__counter_dictionary[clause_id] = 0
+                    self.__contradiction_clause_list.append(clause_id)
                 # Unit clause
-                if (temp_counter == 1):
-                    unit_clause_list.append(i)
+                elif (len(undefinied_literal_list) == 1):
+                    self.__counter_dictionary[clause_id] = 1
+                    self.__unit_clause_list.append(clause_id)
+                else:
+                    self.__counter_dictionary[clause_id] = len(undefinied_literal_list)
 
-        return (len(contradiction_clause_list) != 0)
-
-    def __is_clause_satisfied(self, clause_id, partial_assignment):
+    def __is_clause_satisfied(self, clause_id):
         clause = self.__cnf[clause_id]
-        return any(x in partial_assignment for x in clause)
+        return any(x in self.__partial_assignment for x in clause)
     
-    def __undefinied_literal_list_for_clause(self, clause_id, partial_assignment):
+    def __undefinied_literal_list_for_clause(self, clause_id):
         clause = self.__cnf[clause_id]
-        return list(filter(lambda x: (x not in partial_assignment) and (-x not in partial_assignment), clause))
+        return list(filter(lambda x: (x not in self.__partial_assignment) and (-x not in self.__partial_assignment), clause))
 
     def original_variable_name(self, variable):
         """
@@ -244,3 +244,11 @@ class CNF:
         """
 
         return self.__literal_list
+
+    @property
+    def partial_assignment(self):
+        """
+        partial_assignment getter
+        """
+
+        return self.__partial_assignment

@@ -16,6 +16,7 @@ class TseitinEncoding:
         Dictionary<int, string> original_variable_dictionary
         Dictionary<string, int> mapping_original_variable_dictionary
         int number_of_clauses
+        int number_of_variables
         string DIMACS_format
         int id
         """
@@ -26,6 +27,7 @@ class TseitinEncoding:
         self.__original_variable_dictionary = {}
         self.__mapping_original_variable_dictionary = {}
         self.__number_of_clauses = 0
+        self.__number_of_variables = 0
         self.__DIMACS_format = ""
         self.__id = 0
 
@@ -50,7 +52,7 @@ class TseitinEncoding:
         self.__DIMACS_format = "c root: {0}".format(l) + "\n"
         self.__DIMACS_format += original_variable + "\n"
         self.__DIMACS_format += fresh_variable + "\n"
-        self.__DIMACS_format += "p cnf {0} {1}".format(self.number_of_variables(), self.number_of_clauses) + "\n"
+        self.__DIMACS_format += "p cnf {0} {1}".format(self.number_of_variables, self.number_of_clauses) + "\n"
         self.__DIMACS_format += DIMACS_format
 
     # Method
@@ -123,6 +125,7 @@ class TseitinEncoding:
         if (node.value in LogicalSignEnum._member_names_):
             l = self.__get_id()
             self.__variable_dictionary[node.id] = (l, "")
+            self.__increment_number_of_variables()
         # Node contains an operand
         else:
             if (node.value in self.__mapping_original_variable_dictionary):
@@ -130,6 +133,7 @@ class TseitinEncoding:
             else:
                 l = self.__get_id()
                 self.__mapping_original_variable_dictionary[node.value] = l
+                self.__increment_number_of_variables()
             self.__variable_dictionary[node.id] = (l, node.value)
 
         return l
@@ -137,12 +141,12 @@ class TseitinEncoding:
     def __increment_number_of_clauses(self, number = 1):
         self.__number_of_clauses += number
 
+    def __increment_number_of_variables(self, number = 1):
+        self.__number_of_variables += number
+
     def __get_id(self):
         self.__id += 1
         return self.__id
-
-    def number_of_variables(self):
-        return len(self.__variable_dictionary)
 
     def __str__(self):
         return self.__DIMACS_format
@@ -179,3 +183,11 @@ class TseitinEncoding:
         """
 
         return self.__original_variable_dictionary
+
+    @property
+    def number_of_variables(self):
+        """
+        number_of_variables getter
+        """
+
+        return self.__number_of_variables

@@ -33,16 +33,17 @@ class DPLL:
             return self.__model
 
         start = time.time()
-        assignment = self.__DPLL_recursive([])
+        is_satisfiable = self.__DPLL_recursive()
         end = time.time()
 
         self.__time = (end - start)
 
         # CNF is unsatisfiable
-        if (assignment == None):
+        if (not is_satisfiable):
             self.__model = None
             return None
 
+        assignment = copy.deepcopy(self.__cnf.partial_assignment)
         assignment.sort(key=abs) 
         self.__model2 = copy.deepcopy(assignment)
 
@@ -57,41 +58,53 @@ class DPLL:
 
         return self.__model2
 
-    def __DPLL_recursive(self, partial_assignment):
-        partial_assignment_copy = copy.deepcopy(partial_assignment)
+    def __DPLL_recursive(self):
+        before_partial_assignment = copy.deepcopy(self.__cnf.partial_assignment)
 
         # Unit propagation
-        is_unsatisfied = self.__cnf.unit_propagation_adjacency_list(partial_assignment_copy)
-        self.__increment_number_of_steps_of_unit_propagation(len(partial_assignment_copy) - len(partial_assignment))
+        is_unsatisfied = self.__cnf.unit_propagation_adjacency_list()
+        
+        after_partial_assignment = self.__cnf.partial_assignment
+        self.__increment_number_of_steps_of_unit_propagation(len(after_partial_assignment) - len(before_partial_assignment))
+
+        remove_literal_list = list(filter(lambda x: x not in before_partial_assignment, after_partial_assignment))
 
         if (is_unsatisfied):
-            return None
+            for l in remove_literal_list:
+                self.__cnf.remove_literal_from_partial_assignment(l)
 
-        undefined_variables_list = self.__cnf.undefined_variables(partial_assignment_copy)
+            return False
+
+        undefined_variables_list = self.__cnf.undefined_variables()
 
         # CNF is satisfied
         if (not undefined_variables_list):
-            return partial_assignment_copy
+            return True
 
         variable = random.choice(undefined_variables_list)
 
         # +variable
-        partial_assignment_copy.append(variable)
+        self.__cnf.add_literal_to_partial_assignment(variable)
         self.__increment_number_of_decisions()
-        result = self.__DPLL_recursive(partial_assignment_copy)
-        if (result is not None):
-            return result
+        result = self.__DPLL_recursive()
+        if (result):
+            return True
 
-        partial_assignment_copy.remove(variable)
+        self.__cnf.remove_literal_from_partial_assignment(variable)
 
         # -variable
-        partial_assignment_copy.append(-variable)
+        self.__cnf.add_literal_to_partial_assignment(-variable)
         self.__increment_number_of_decisions()
-        result = self.__DPLL_recursive(partial_assignment_copy)
-        if (result is not None):
-            return result
+        result = self.__DPLL_recursive()
+        if (result):
+            return True
+        
+        self.__cnf.remove_literal_from_partial_assignment(-variable)
 
-        return None
+        for l in remove_literal_list:
+            self.__cnf.remove_literal_from_partial_assignment(l)
+
+        return False
 
     def __increment_number_of_decisions(self):
         self.__number_of_decisions += 1
