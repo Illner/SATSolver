@@ -77,3 +77,6 @@ except (MyException.InvalidArgumentsDPLLTaskException,
     print(e)
 except FileNotFoundError:
     print("Input file does not exist")
+except Exception as e:
+    print("Something wrong")
+    print(e)

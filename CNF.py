@@ -86,13 +86,14 @@ class CNF:
                     raise MyException.InvalidDIMACSFormatException("Invalid clause line")
 
                 self.__cnf.append(clause)
-                clause_id += 1
 
                 # Set counter
                 if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
                     self.__counter_dictionary[clause_id] = len(clause)
                     if (len(clause) == 1):
                         self.__unit_clause_list.append(clause_id)
+
+                clause_id += 1
     
     def __update_adjacency_list(self, variable, clause_id):
         variable = abs(variable)
