@@ -81,7 +81,8 @@ class DPLL:
         if (not undefined_variables_list):
             return True
 
-        variable = random.choice(undefined_variables_list)
+        # variable = random.choice(undefined_variables_list)
+        variable = undefined_variables_list[0]
 
         # +variable
         self.__cnf.add_literal_to_partial_assignment(variable)

@@ -47,16 +47,17 @@ try:
     if (not DIMACS_format):
         derivationTree = DerivationTree(input_formula)
         tseitinEncoding = TseitinEncoding(derivationTree)
-        cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary)
+        cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals)
     else:
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList)
-
+        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals)
+        
     dpll = DPLL(cnf)
     result = dpll.DPLL()
 
     print("Total CPU time: " + str(dpll.time) + "s")
     print("Number of decisions: " + str(dpll.number_of_decisions))
     print("Number of steps of unit propagation: " + str(dpll.number_of_steps_of_unit_propagation))
+    print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
 
     if (result is None):
         print("-----")
@@ -67,6 +68,9 @@ try:
         print("SAT")
         print("---")
         print(result)
+
+    if (not cnf.verify(result)):
+        raise MyException.SomethingWrongException("Invalid model")
 
 except (MyException.InvalidArgumentsDPLLTaskException, 
         MyException.MissingOperandDerivationTreeException, 
