@@ -21,7 +21,7 @@ class CNF:
         List<int> contradiction_clause_list
         List<int> counter_list
         List<Tupe<int, int>> clause_watched_literals_list
-        Dictionary<int, Tuple<HashSet<int>, HashSet<int>>> variable_wacthed_literals_dictionary
+        Dictionary<int, Tuple<HashSet<int>, HashSet<int>>> variable_watched_literals_dictionary
         UnitPropagationEnum unit_propagation_enum
         Dictionary<int, string> original_variable_dictionary
         Dictionary<int, List<int>> adjacency_list_dictionary
@@ -45,7 +45,7 @@ class CNF:
 
         if (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
             self.__clause_watched_literals_list = []
-            self.__variable_wacthed_literals_dictionary = {}
+            self.__variable_watched_literals_dictionary = {}
 
         self.__create_cnf(DIMACS_format)
 
@@ -57,8 +57,8 @@ class CNF:
         # Complete the variable watched literals list
         if (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
             for variable in self.__variable_list:
-                if (variable not in self.__variable_wacthed_literals_dictionary):
-                    self.__variable_wacthed_literals_dictionary[variable] = (set(), set())
+                if (variable not in self.__variable_watched_literals_dictionary):
+                    self.__variable_watched_literals_dictionary[variable] = (set(), set())
 
     # Method
     def __create_cnf(self, DIMACS_format):
@@ -146,15 +146,15 @@ class CNF:
         variable = abs(literal)
 
         # Variable does not exist in the watched literals list
-        if (variable not in self.__variable_wacthed_literals_dictionary):
-            self.__variable_wacthed_literals_dictionary[variable] = (set(), set())
+        if (variable not in self.__variable_watched_literals_dictionary):
+            self.__variable_watched_literals_dictionary[variable] = (set(), set())
 
         # Positive literal
         if (literal > 0):
-            self.__variable_wacthed_literals_dictionary[variable][0].add(clause_id)
+            self.__variable_watched_literals_dictionary[variable][0].add(clause_id)
         # Negative literal
         else:
-            self.__variable_wacthed_literals_dictionary[variable][1].add(clause_id)
+            self.__variable_watched_literals_dictionary[variable][1].add(clause_id)
 
     def __check_partial_assignment(self):
         """
@@ -194,7 +194,7 @@ class CNF:
             clause_id = self.__unit_clause_list.pop()
 
             self.__increment_number_of_checked_clauses()
-            undefinied_literal_list = self.__undefinied_literal_list_for_clause(clause_id)
+            undefinied_literal_list = self.__undefined_literal_list_for_clause(clause_id)
 
             l = undefinied_literal_list.pop()
             self.add_literal_to_partial_assignment(l)
@@ -309,7 +309,7 @@ class CNF:
             if (is_satisfied):
                 self.__counter_list[clause_id] = 0
             else:
-                undefinied_literal_list = self.__undefinied_literal_list_for_clause(clause_id)
+                undefinied_literal_list = self.__undefined_literal_list_for_clause(clause_id)
                 # Clause is unsatisfied
                 if (len(undefinied_literal_list) == 0):
                     self.__counter_list[clause_id] = 0
@@ -325,27 +325,28 @@ class CNF:
         variable = abs(literal)
         clauses_to_delete_list = []
 
-        for clause_id in self.__variable_wacthed_literals_dictionary[variable][int (literal > 0)]:
+        for clause_id in self.__variable_watched_literals_dictionary[variable][int (literal > 0)]:
             w_l_1 = -literal
             w_l_2 = self.__clause_watched_literals_list[clause_id][0] if (self.__clause_watched_literals_list[clause_id][0] != w_l_1) else self.__clause_watched_literals_list[clause_id][1]
             
             self.__increment_number_of_checked_clauses()
-            valid_value_for_w_l_1_list = list(filter(lambda x: (-x not in self.__partial_assignment) and (x != w_l_2), self.__cnf[clause_id]))
+            valid_value_for_w_l_1_iterator = filter(lambda x: (-x not in self.__partial_assignment) and (x != w_l_2), self.__cnf[clause_id])
 
-            if (len(valid_value_for_w_l_1_list)):
-                w_l_1 = valid_value_for_w_l_1_list[0]
+            w_l_1 = next(valid_value_for_w_l_1_iterator, None)
+
+            if (w_l_1 is not None):
                 clauses_to_delete_list.append(clause_id)
-                self.__variable_wacthed_literals_dictionary[abs(w_l_1)][int (-w_l_1 > 0)].add(clause_id)
+                self.__variable_watched_literals_dictionary[abs(w_l_1)][int (-w_l_1 > 0)].add(clause_id)
                 self.__clause_watched_literals_list[clause_id] = (w_l_1, w_l_2)
 
         for clause_id in clauses_to_delete_list:
-            self.__variable_wacthed_literals_dictionary[variable][int (literal > 0)].remove(clause_id)
+            self.__variable_watched_literals_dictionary[variable][int (literal > 0)].remove(clause_id)
 
     def __is_clause_satisfied(self, clause_id):
         clause = self.__cnf[clause_id]
         return any(x in self.__partial_assignment for x in clause)
     
-    def __undefinied_literal_list_for_clause(self, clause_id):
+    def __undefined_literal_list_for_clause(self, clause_id):
         clause = self.__cnf[clause_id]
         return (list(filter(lambda x: (x not in self.__partial_assignment) and (-x not in self.__partial_assignment), clause)))
 
