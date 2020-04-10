@@ -21,6 +21,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CDCL.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="CNF.py">
       <SubType>Code</SubType>
     </Compile>

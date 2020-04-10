@@ -14,13 +14,15 @@ class CNF:
         int number_of_clauses
         int number_of_variables
         int number_of_checked_clauses
+        int actual_level
         List<int> literal_list
         List<int> variable_list
-        List<int> partial_assignment_list
+        List<Tuple<int, int>> partial_assignment_list
+        HashSet<int> partial_assignment_only_literals_hashset
         List<int> unit_clause_list
         List<int> contradiction_clause_list
         List<int> counter_list
-        List<Tupe<int, int>> clause_watched_literals_list
+        List<Tuple<int, int>> clause_watched_literals_list
         Dictionary<int, Tuple<HashSet<int>, HashSet<int>>> variable_watched_literals_dictionary
         UnitPropagationEnum unit_propagation_enum
         Dictionary<int, string> original_variable_dictionary
@@ -30,11 +32,13 @@ class CNF:
         """
 
         self.__cnf = []
+        self.__actual_level = 0
         self.__number_of_clauses = 0
         self.__number_of_variables = 0
         self.__number_of_checked_clauses = 0
-        self.__partial_assignment = []
+        self.__partial_assignment_list = []
         self.__unit_propagation_enum = unit_propagation_enum
+        self.__partial_assignment_only_literals_hashset = set()
         self.__original_variable_dictionary = copy.deepcopy(original_variable_dictionary)
 
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
@@ -156,30 +160,41 @@ class CNF:
         else:
             self.__variable_watched_literals_dictionary[variable][1].add(clause_id)
 
+    def level_in_partial_assignment_for_literal(self, literal):
+        """
+        Return level for the literal, if the literal is not in the partial assignment returns None
+        """
+
+        for (x, l) in self.__partial_assignment_list:
+            if (x == literal):
+                return l
+
+        return None
+
     def __check_partial_assignment(self):
         """
         Returns True if the partial assignment is valid otherwise False
         """
 
         # Check if all literals in the partial assignment exist in the formula
-        if(not(all(x in self.__literal_list for x in self.__partial_assignment))):
+        if(not(all(x in self.__literal_list for (x, _) in self.__partial_assignment_list))):
             return False
 
         # Check if the partial assignment does not contain a contradiction
-        if(not(all(-x not in self.__partial_assignment for x in self.__partial_assignment))):
+        if(not(all(-x not in self.__partial_assignment_only_literals_hashset for (x, _) in self.__partial_assignment_list))):
             return False
 
         return True
 
     def undefined_variables(self, check_partial_assignment = False):
         """
-        Returns a list of variables which are undefinied in the partial assignment
+        Returns a list of variables which are undefined in the partial assignment
         """
 
         if (check_partial_assignment and not(self.__check_partial_assignment())):
-            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment))
+            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment_list))
 
-        return list(filter(lambda x: (x not in self.__partial_assignment) and (-x not in self.__partial_assignment), self.__variable_list))
+        return list(filter(lambda x: (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset), self.__variable_list))
 
     def unit_propagation(self):
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
@@ -194,9 +209,9 @@ class CNF:
             clause_id = self.__unit_clause_list.pop()
 
             self.__increment_number_of_checked_clauses()
-            undefinied_literal_list = self.__undefined_literal_list_for_clause(clause_id)
+            undefined_literal_list = self.__undefined_literal_list_for_clause(clause_id)
 
-            l = undefinied_literal_list.pop()
+            l = undefined_literal_list.pop()
             self.add_literal_to_partial_assignment(l)
 
             if (len(self.__contradiction_clause_list) != 0):
@@ -220,8 +235,8 @@ class CNF:
                 if ((not is_w_l_1_defined) and (not is_w_l_2_defined)):
                     continue
 
-                is_w_l_1_satisfied = w_l_1 in self.__partial_assignment
-                is_w_l_2_satisfied = w_l_2 in self.__partial_assignment
+                is_w_l_1_satisfied = w_l_1 in self.__partial_assignment_only_literals_hashset
+                is_w_l_2_satisfied = w_l_2 in self.__partial_assignment_only_literals_hashset
 
                 # At least one watched literal is satisfied
                 if (is_w_l_1_satisfied or is_w_l_2_satisfied):
@@ -263,13 +278,15 @@ class CNF:
         return False
 
     def add_literal_to_partial_assignment(self, literal, check_partial_assignment = False):
-        self.__partial_assignment.append(literal)
+        self.__partial_assignment_list.append([literal, self.__actual_level])
+        self.__partial_assignment_only_literals_hashset.add(literal)
+
         self.__undefined_literals_hashset.remove(literal)
         self.__undefined_literals_hashset.remove(-literal)
 
         # Check if the partial assignment is valid
         if (check_partial_assignment and not(self.__check_partial_assignment())):
-            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment))
+            raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment_list))
 
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
             self.__update_counter(literal)
@@ -280,10 +297,14 @@ class CNF:
 
     def remove_literal_from_partial_assignment(self, literal):
         # Check if the literal exists in the partial assignment
-        if (literal not in self.__partial_assignment):
-            raise MyException.InvalidLiteralInPartialAssignmentCnfException("Literal '{0}' is not in the partial assignment: '{1}'".format(literal, self.__partial_assignment))
+        if (literal not in self.__partial_assignment_only_literals_hashset):
+            raise MyException.InvalidLiteralInPartialAssignmentCnfException("Literal '{0}' is not in the partial assignment: '{1}'".format(literal, self.__partial_assignment_list))
 
-        self.__partial_assignment.remove(literal)
+        level = self.level_in_partial_assignment_for_literal(literal)
+
+        self.__partial_assignment_list.remove([literal, level])
+        self.__partial_assignment_only_literals_hashset.remove(literal)
+
         self.__undefined_literals_hashset.add(literal)
         self.__undefined_literals_hashset.add(-literal)
 
@@ -309,17 +330,17 @@ class CNF:
             if (is_satisfied):
                 self.__counter_list[clause_id] = 0
             else:
-                undefinied_literal_list = self.__undefined_literal_list_for_clause(clause_id)
+                undefined_literal_list = self.__undefined_literal_list_for_clause(clause_id)
                 # Clause is unsatisfied
-                if (len(undefinied_literal_list) == 0):
+                if (len(undefined_literal_list) == 0):
                     self.__counter_list[clause_id] = 0
                     self.__contradiction_clause_list.append(clause_id)
                 # Unit clause
-                elif (len(undefinied_literal_list) == 1):
+                elif (len(undefined_literal_list) == 1):
                     self.__counter_list[clause_id] = 1
                     self.__unit_clause_list.append(clause_id)
                 else:
-                    self.__counter_list[clause_id] = len(undefinied_literal_list)
+                    self.__counter_list[clause_id] = len(undefined_literal_list)
 
     def __update_watched_literals(self, literal):
         variable = abs(literal)
@@ -330,7 +351,7 @@ class CNF:
             w_l_2 = self.__clause_watched_literals_list[clause_id][0] if (self.__clause_watched_literals_list[clause_id][0] != w_l_1) else self.__clause_watched_literals_list[clause_id][1]
             
             self.__increment_number_of_checked_clauses()
-            valid_value_for_w_l_1_iterator = filter(lambda x: (-x not in self.__partial_assignment) and (x != w_l_2), self.__cnf[clause_id])
+            valid_value_for_w_l_1_iterator = filter(lambda x: (-x not in self.__partial_assignment_only_literals_hashset) and (x != w_l_2), self.__cnf[clause_id])
 
             w_l_1 = next(valid_value_for_w_l_1_iterator, None)
 
@@ -344,11 +365,11 @@ class CNF:
 
     def __is_clause_satisfied(self, clause_id):
         clause = self.__cnf[clause_id]
-        return any(x in self.__partial_assignment for x in clause)
+        return any(x in self.__partial_assignment_only_literals_hashset for x in clause)
     
     def __undefined_literal_list_for_clause(self, clause_id):
         clause = self.__cnf[clause_id]
-        return (list(filter(lambda x: (x not in self.__partial_assignment) and (-x not in self.__partial_assignment), clause)))
+        return (list(filter(lambda x: (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset), clause)))
 
     def original_variable_name(self, variable):
         """
@@ -371,6 +392,12 @@ class CNF:
 
     def __increment_number_of_checked_clauses(self, number = 1):
         self.__number_of_checked_clauses += number
+
+    def increment_actual_level(self):
+        self.__actual_level += 1
+
+    def decrement_actual_level(self):
+        self.__actual_level -= 1
 
     # Property
     @property
@@ -416,10 +443,18 @@ class CNF:
     @property
     def partial_assignment(self):
         """
+        partial_assignment_only_literals_hashset getter
+        """
+
+        return list(self.__partial_assignment_only_literals_hashset)
+
+    @property
+    def partial_assignment_with_levels(self):
+        """
         partial_assignment getter
         """
 
-        return self.__partial_assignment
+        return self.__partial_assignment_list
 
     @property
     def number_of_checked_clauses(self):
@@ -428,3 +463,11 @@ class CNF:
         """
 
         return self.__number_of_checked_clauses
+
+    @property
+    def actual_level(self):
+        """
+        actual_level getter
+        """
+
+        return self.__actual_level
