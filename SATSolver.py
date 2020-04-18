@@ -2,12 +2,15 @@ import os
 import random
 import MyException
 from CNF import CNF
-from DPLL import DPLL
+from CDCL import CDCL
 import matplotlib.pyplot as plt
 from DerivationTree import DerivationTree
 from LogicalSignEnum import LogicalSignEnum
 from TseitinEncoding import TseitinEncoding
+from ClauseLearningEnum import ClauseLearningEnum
 from UnitPropagationEnum import UnitPropagationEnum
+from ClauseDeletionHeuristicEnum import ClauseDeletionHowHeuristicEnum
+from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 
 path = os.path.join(os.path.dirname(__file__), 'CNF')
 dictionary_list = ["20-91", "50-218", "75-325", "100-430"]
@@ -33,45 +36,54 @@ for i in range(len(dictionary_list)):
 
         print(file)
 
+        is_sat = None
         if (file.startswith("uuf")):
+            is_sat = False
             print("UNSAT")
         else:
+            is_sat = True
             print("SAT")
 
         with open(file_path, "r") as input_file:
             input_formula = input_file.read()
 
         # Adjacency list
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList)
-        dpll = DPLL(cnf)
-        result = dpll.DPLL()
+        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList, clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP)
+        cdcl = CDCL(cnf)
+        result = cdcl.CDCL()
 
         if (not cnf.verify(result)):
             raise MyException.SomethingWrongException("Invalid model - adjacency list")
 
-        print("Time: " + str(dpll.time))
-        print("Number of decisions: " + str(dpll.number_of_decisions))
-        print("Number of steps of unit propagation: " + str(dpll.number_of_steps_of_unit_propagation))
+        if (is_sat and result is None):
+            raise MyException.SomethingWrongException("Invalid model - adjacency list")
+
+        print("Time: " + str(cdcl.time))
+        print("Number of decisions: " + str(cdcl.number_of_decisions))
+        print("Number of steps of unit propagation: " + str(cdcl.number_of_steps_of_unit_propagation))
         print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
 
-        log_adjacency_list[i].append((dpll.time, dpll.number_of_decisions, dpll.number_of_steps_of_unit_propagation, cnf.number_of_checked_clauses))
+        log_adjacency_list[i].append((cdcl.time, cdcl.number_of_decisions, cdcl.number_of_steps_of_unit_propagation, cnf.number_of_checked_clauses))
 
         print()
-
+        
         # Watched literals
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals)
-        dpll = DPLL(cnf)
-        result = dpll.DPLL()
+        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals, clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP)
+        cdcl = CDCL(cnf)
+        result = cdcl.CDCL()
 
         if (not cnf.verify(result)):
             raise MyException.SomethingWrongException("Invalid model - watched literals")
 
-        print("Time: " + str(dpll.time))
-        print("Number of decisions: " + str(dpll.number_of_decisions))
-        print("Number of steps of unit propagation: " + str(dpll.number_of_steps_of_unit_propagation))
+        if (is_sat and result is None):
+            raise MyException.SomethingWrongException("Invalid model - watched literals")
+
+        print("Time: " + str(cdcl.time))
+        print("Number of decisions: " + str(cdcl.number_of_decisions))
+        print("Number of steps of unit propagation: " + str(cdcl.number_of_steps_of_unit_propagation))
         print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
 
-        log_watched_literals[i].append((dpll.time, dpll.number_of_decisions, dpll.number_of_steps_of_unit_propagation, cnf.number_of_checked_clauses))
+        log_watched_literals[i].append((cdcl.time, cdcl.number_of_decisions, cdcl.number_of_steps_of_unit_propagation, cnf.number_of_checked_clauses))
 
 # Log adjacency list
 time_y_adjacency_list = []

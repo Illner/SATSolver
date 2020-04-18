@@ -96,3 +96,51 @@ class InvalidArgumentsDPLLTaskException(Exception):
             super().__init__("Invalid arguments\ndpllTask.py [-DIMACS | -SMT-LIB] input_path")
         else: 
             super().__init__(message)
+
+class InvalidLiteralInLearnedClauseCnfException(Exception):
+    """
+    Invalid literal in learned clause
+    """
+
+    def __init__(self, message):
+        super().__init__(message)
+
+class LearnedClauseIdDoesNotExistCnfException(Exception):
+    """
+    Learned clause ID does not exist
+    """
+
+    def __init__(self, message):
+        super().__init__(message)
+
+class ClausesDoNotContainLiteralResolutionCnfException(Exception):
+    """
+    Clauses do not contain literal
+    """
+
+    def __init__(self, message):
+        super().__init__(message)
+
+class InvalidParametersCnfException(Exception):
+    """
+    Invalid parameters
+    """
+
+    def __init__(self, message):
+        super().__init__("Invalid parameters!\n" + message)
+
+class InvalidDecisionLevelCnfException(Exception):
+    """
+    Invalid decision level
+    """
+
+    def __init__(self, message):
+        super().__init__("Invalid decision level!\n" + message)
+
+class UndefinedClauseLearningCnfException(Exception):
+    """
+    Undefined clause learning
+    """
+
+    def __init__(self, message):
+        super().__init__(message)

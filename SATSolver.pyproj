@@ -24,6 +24,15 @@
     <Compile Include="CDCL.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="cdclTask.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ClauseDeletionHeuristicEnum.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ClauseLearningEnum.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="CNF.py">
       <SubType>Code</SubType>
     </Compile>
@@ -36,6 +45,9 @@
     <Compile Include="dpllTask.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Example.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="formula2cnf.py">
       <SubType>Code</SubType>
     </Compile>
@@ -45,11 +57,17 @@
     <Compile Include="MyException.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RestartStrategyEnum.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SATSolver.py" />
     <Compile Include="TseitinEncoding.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UnitPropagationEnum.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UnitPropagationTest.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
