@@ -305,7 +305,6 @@ class CNF:
         2) Learned clauses are supported
             Return new decision level (assertive level) if a contradiction occurs, otherwise None
         """
-
         temp_contradiction = None
 
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
@@ -382,8 +381,13 @@ class CNF:
 
                 self.add_literal_to_partial_assignment(l)
 
+                # Learned clauses - contradiction
                 if (len(self.__contradiction_learned_clause_list) != 0):
                     temp_contradiction = (self.__contradiction_learned_clause_list[0], False)
+
+                # Original CNF - contradiction
+                if (len(self.__contradiction_clause_list) != 0):
+                    temp_contradiction = (self.__contradiction_clause_list[0], True)
 
             if ((not self.__unit_clause_list and (not self.__use_learned_clauses or not self.__unit_learned_clause_list)) 
                 or temp_contradiction is not None):
@@ -687,6 +691,10 @@ class CNF:
         if (not learned_clause):
             return
 
+        for x in learned_clause:
+            if (-x not in self.__partial_assignment_only_literals_hashset):
+                raise MyException.SomethingWrongException("{0} is not unsatisfied".format(x))
+
         learned_clause_id = self.__number_of_learned_clauses
         self.__number_of_learned_clauses += 1
         self.__learned_clauses.append(learned_clause)
@@ -714,7 +722,7 @@ class CNF:
                     self.__unit_learned_clause_list.append(learned_clause_id)
                 else:
                     self.__counter_learned_clause_list.append(len(undefined_literal_list))
-        
+
         # Watched literals
         elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
             # Learned clause has only one literal

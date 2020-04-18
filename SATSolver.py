@@ -48,7 +48,7 @@ for i in range(len(dictionary_list)):
             input_formula = input_file.read()
 
         # Adjacency list
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals, clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses)
+        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList, clause_learning_enum=ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses)
         cdcl = CDCL(cnf)
         result = cdcl.CDCL()
 
@@ -68,7 +68,7 @@ for i in range(len(dictionary_list)):
         print()
         
         # Watched literals
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals, clause_learning_enum=ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses)
+        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals, clause_learning_enum=ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses)
         cdcl = CDCL(cnf)
         result = cdcl.CDCL()
 
