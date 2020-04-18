@@ -5,7 +5,9 @@ from CDCL import CDCL
 from DerivationTree import DerivationTree
 from TseitinEncoding import TseitinEncoding
 from ClauseLearningEnum import ClauseLearningEnum
+from RestartStrategyEnum import RestartStrategyEnum
 from UnitPropagationEnum import UnitPropagationEnum
+from DecisionHeuristicEnum import DecisionHeuristicEnum
 from ClauseDeletionHeuristicEnum import ClauseDeletionHowHeuristicEnum
 from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 
@@ -50,9 +52,19 @@ try:
     if (not DIMACS_format):
         derivationTree = DerivationTree(input_formula)
         tseitinEncoding = TseitinEncoding(derivationTree)
-        cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary, unit_propagation_enum=UnitPropagationEnum.AdjacencyList, clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses)
+        cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary, 
+                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.none, 
+                  restart_strategy_enum=RestartStrategyEnum.none)
     else:
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList, clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses)
+        cnf = CNF(input_formula, 
+                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.none, 
+                  restart_strategy_enum=RestartStrategyEnum.none)
         
     cdcl = CDCL(cnf)
     result = cdcl.CDCL()

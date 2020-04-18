@@ -9,6 +9,8 @@ from LogicalSignEnum import LogicalSignEnum
 from TseitinEncoding import TseitinEncoding
 from ClauseLearningEnum import ClauseLearningEnum
 from UnitPropagationEnum import UnitPropagationEnum
+from RestartStrategyEnum import RestartStrategyEnum
+from DecisionHeuristicEnum import DecisionHeuristicEnum
 from ClauseDeletionHeuristicEnum import ClauseDeletionHowHeuristicEnum
 from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 
@@ -48,7 +50,13 @@ for i in range(len(dictionary_list)):
             input_formula = input_file.read()
 
         # Adjacency list
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList, clause_learning_enum=ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses)
+        cnf = CNF(input_formula, 
+                  unit_propagation_enum=UnitPropagationEnum.AdjacencyList,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
+                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClauses, 
+                  restart_strategy_enum=RestartStrategyEnum.GeometricStrategy)
+
         cdcl = CDCL(cnf)
         result = cdcl.CDCL()
 
@@ -68,7 +76,13 @@ for i in range(len(dictionary_list)):
         print()
         
         # Watched literals
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.WatchedLiterals, clause_learning_enum=ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent, clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses)
+        cnf = CNF(input_formula,
+                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  clause_learning_enum=ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent, 
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses, 
+                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
+
         cdcl = CDCL(cnf)
         result = cdcl.CDCL()
 

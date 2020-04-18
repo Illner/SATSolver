@@ -1,4 +1,6 @@
+import sys
 import copy
+import random
 import MyException
 from itertools import chain
 from ClauseLearningEnum import ClauseLearningEnum
@@ -56,6 +58,14 @@ class CNF:
         HashSet<int> active_learned_clause_hashset
         Dictionary<int, int> active_counter_learned_clause_dictionary
 
+        int number_of_restarts
+        int number_of_conflicts
+        int max_number_of_conflicts
+        int first_term_geometric_restart_strategy
+        double common_ratio_geometric_restart_strategy
+        int unit_luby_restart_strategy
+        Iterator restart_strategy_iterator
+
         List<int> unit_learned_clause_list
         List<int> contradiction_learned_clause_list
         List<int> counter_learned_clause_list
@@ -89,8 +99,25 @@ class CNF:
             self.__number_of_learned_clauses = 0
             self.__antecedent_dictionary = {}
             self.__active_learned_clause_hashset = set()
+            # Keep active
             if (self.__is_keep_active_clauses_heuristic):
                 self.__active_counter_learned_clause_dictionary = {}
+
+            # Restart
+            if (self.__has_restart()):
+                self.__number_of_restarts = 0
+                self.__number_of_conflicts = 0
+
+                # Geometric strategy
+                if (self.__restart_strategy_enum == RestartStrategyEnum.GeometricStrategy):
+                    self.__first_term_geometric_restart_strategy = 100
+                    self.__common_ratio_geometric_restart_strategy = 1.5
+                # Luby strategy
+                if (self.__restart_strategy_enum == RestartStrategyEnum.LubyStrategy):
+                    self.__unit_luby_restart_strategy = 100
+
+                self.__restart_strategy_iterator = self.__get_restart_strategy_iterator()
+                self.__max_number_of_conflicts = next(self.__restart_strategy_iterator)
 
         # Check if parameters are valid
         if (not self.__use_learned_clauses and (not (self.__restart_strategy_enum == RestartStrategyEnum.none) or not (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.none) or not (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.none))):
@@ -327,6 +354,11 @@ class CNF:
             return None
 
         # Learned clauses are supported - Contradiction
+        if (self.__has_restart()):
+            self.__increment_number_of_conflicts()
+            if (self.__restart()):
+                return 0 # New decision level
+
         (clause_id, is_original_clause) = temp_contradiction
 
         temp_contradiction_clause = []
@@ -666,7 +698,7 @@ class CNF:
         if (decision_level < 0 or decision_level > self.__current_decision_level):
             raise MyException.InvalidDecisionLevelCnfException(decision_level)
 
-        while (True and self.__partial_assignment_list):
+        while (self.__partial_assignment_list):
             (literal, level) = self.__partial_assignment_list[-1]
             if (level > decision_level):
                 self.remove_literal_from_partial_assignment(literal)
@@ -1024,19 +1056,116 @@ class CNF:
 
         return resolvent
 
+    # Restart
+    def __has_restart(self):
+        """
+        Return true if restarts are supported, otherwise false
+        """
+
+        if (self.__restart_strategy_enum != RestartStrategyEnum.none):
+            return True
+
+        return False
+
+    def __increment_number_of_conflicts(self, number = 1):
+        self.__number_of_conflicts += number
+
+    def __reset_number_of_conflicts(self):
+        self.__number_of_conflicts = 0
+
+    def __get_restart_strategy_iterator(self):
+        # Geometric strategy
+        if (self.__restart_strategy_enum == RestartStrategyEnum.GeometricStrategy):
+            return self.__geometric_restart_strategy_iterator()
+
+        # Luby strategy
+        if (self.__restart_strategy_enum == RestartStrategyEnum.LubyStrategy):
+            return self.__luby_restart_strategy_iterator()
+
+        raise MyException.UndefinedRestartStrategyCnfException(str(self.__restart_strategy_enum))
+
+    def __geometric_restart_strategy_iterator(self):
+        value = self.__first_term_geometric_restart_strategy
+        yield value
+
+        while (True):
+            value = int(value * self.__common_ratio_geometric_restart_strategy)
+            yield value
+
+    def __luby_restart_strategy_iterator(self):
+        for i in range(1, sys.maxsize**10):
+            yield self.__unit_luby_restart_strategy * self.__luby_sequence(i)
+
+    def __luby_sequence(self, i):
+        for k in range(1, 32):
+            if i == (1 << k) - 1:
+                return 1 << (k - 1)
+        for k in range(1, sys.maxsize**10):
+            if (1 << (k - 1) <= i) and (i < (1 << k) - 1):
+                return self.__luby_sequence(i - (1 << (k - 1)) + 1)
+
+    def __restart(self):
+        """
+        Return true if restart happened otherwise false
+        """
+
+        if (self.__number_of_conflicts != self.__max_number_of_conflicts):
+            return False
+
+        self.__number_of_restarts += 1
+        self.__number_of_conflicts = 0
+        self.__max_number_of_conflicts = next(self.__restart_strategy_iterator)
+        
+        # Update data structures
+        # Original CNF
+        self.__partial_assignment_list = []
+        self.__variable_level_dictionary = {}
+        self.__partial_assignment_only_literals_hashset = set()
+        self.__undefined_literals_hashset = set(self.__literal_list)
+
+        # Learned clauses
+        self.__active_learned_clause_hashset = set()
+        for x in self.__antecedent_dictionary:
+            self.__antecedent_dictionary[x] = None
+
+        # Adjacency list
+        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+            for (i, clause) in enumerate(self.__cnf):
+                self.__counter_list[i] = len(clause)
+
+            for (i, learned_clause) in enumerate(self.__learned_clauses):
+                self.__counter_learned_clause_list[i] = len(learned_clause)
+
+            self.__unit_clause_list = []
+            self.__contradiction_clause_list = []
+            self.__unit_learned_clause_list = []
+            self.__contradiction_learned_clause_list = []
+
+        return True
+
     # Decision variable
     def decision_literal(self):
         # Greedy decision literal
         if (self.__decision_heuristic_enum == DecisionHeuristicEnum.Greedy):
             return self.__decision_literal_greedy()
 
+        # Random decision literal
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.Random):
+            return self.__decision_literal_random()
+
         raise MyException.UndefinedClauseLearningCnfException(str(self.__decision_heuristic_enum))
     
     def __decision_literal_greedy(self):
+        """
+        Return a decision literal candidate
+        """
+
         for clause in self.__cnf:
+            # Clause is satisfied
             if (any(x in self.__partial_assignment_only_literals_hashset for x in clause)):
                 continue
 
+            # Clause is unresolved
             for x in clause:
                 if (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset):
                     return x
@@ -1045,6 +1174,32 @@ class CNF:
           return self.first_undefined_variable()
 
         return None
+
+    def __decision_literal_random(self):
+        """
+        Return a random decision literal candidate
+        """
+
+        literal_hashset = set()
+
+        for clause in self.__cnf:
+            # Clause is satisfied
+            if (any(x in self.__partial_assignment_only_literals_hashset for x in clause)):
+                continue
+
+            # Clause is unresolved
+            for x in clause:
+                if (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset):
+                    literal_hashset.add(x)
+
+        for x in self.__undefined_literals_hashset:
+            if ((x not in self.__partial_assignment_list) and (-x not in self.__partial_assignment_list) and (-x is not literal_hashset)):
+                literal_hashset.add(x)
+
+        if (not literal_hashset):
+            return None
+
+        return random.sample(literal_hashset, 1)[0]
 
     # Property
     @property
@@ -1149,39 +1304,10 @@ class CNF:
 
         self.__current_decision_level = new_decision_level
 
-    # Test
     @property
-    def adjacency_list_learned_clause_dictionary(self):
-        return self.__adjacency_list_learned_clause_dictionary
-    
-    @property
-    def counter_learned_clause_list(self):
-        return self.__counter_learned_clause_list
+    def number_of_restarts(self):
+        """
+        number_of_restarts getter
+        """
 
-    @property
-    def unit_learned_clause_list(self):
-        return self.__unit_learned_clause_list
-
-    @property
-    def contradiction_learned_clause_list(self):
-        return self.__contradiction_learned_clause_list
-
-    @property
-    def variable_watched_literals_learned_clause_dictionary(self):
-        return self.__variable_watched_literals_learned_clause_dictionary
-
-    @property
-    def learned_clause_watched_literals_list(self):
-        return self.__learned_clause_watched_literals_list
-
-    @property
-    def active_counter_learned_clause_dictionary(self):
-        return self.__active_counter_learned_clause_dictionary
-
-    @property
-    def antecedent_dictionary(self):
-        return self.__antecedent_dictionary
-
-    @property
-    def active_learned_clause_hashset(self):
-        return self.__active_learned_clause_hashset
+        return self.number_of_restarts

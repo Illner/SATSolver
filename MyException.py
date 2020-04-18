@@ -155,3 +155,14 @@ class UndefinedDecisionHeuristicCnfException(Exception):
             super().__init__("Undefined decision heuristic")
         else:
             super().__init__("Undefined decision heuristic: " + message)
+
+class UndefinedRestartStrategyCnfException(Exception):
+    """
+    Undefined restart strategy
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Undefined restart strategy")
+        else:
+            super().__init__("Undefined restart strategy: " + message)
