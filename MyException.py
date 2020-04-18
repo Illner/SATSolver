@@ -144,3 +144,14 @@ class UndefinedClauseLearningCnfException(Exception):
 
     def __init__(self, message):
         super().__init__(message)
+
+class UndefinedDecisionHeuristicCnfException(Exception):
+    """
+    Undefined decision heuristic
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Undefined decision heuristic")
+        else:
+            super().__init__("Undefined decision heuristic: " + message)

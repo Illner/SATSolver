@@ -60,31 +60,29 @@ class CDCL:
         return self.__model2
 
     def __CDCL(self):
+        # Main loop
         while(True):
+            number_of_assigned_literals_before_unit_propagation = len(self.__cnf.partial_assignment)
+
             # Unit propagation
             level = self.__cnf.unit_propagation()
-            self.__increment_number_of_steps_of_unit_propagation(len(self.__cnf.partial_assignment))
+            self.__increment_number_of_steps_of_unit_propagation(len(self.__cnf.partial_assignment) - number_of_assigned_literals_before_unit_propagation)
 
             # CNF is not satisfied
             if (level is not None and self.__cnf.current_decision_level == 0):
                 return False
 
-            # Contradiction
+            # Contradiction occurs
             if (level is not None):
                 self.__cnf.backtrack_to_decision_level(level)
                 self.__cnf.current_decision_level = level
                 continue
 
-            undefined_variables_list = self.__cnf.undefined_variables()
-
             # CNF is satisfied
-            if (not undefined_variables_list):
+            if (not self.__cnf.exists_undefined_variable()):
                 return True
 
-            variable = self.__cnf.get_undefined_literal()
-
-            if (variable is None):
-                variable = undefined_variables_list[0]
+            variable = self.__cnf.decision_literal()
 
             self.__cnf.increment_current_decision_level()
             self.__cnf.add_literal_to_partial_assignment(variable)

@@ -36,6 +36,9 @@
     <Compile Include="CNF.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DecisionHeuristicEnum.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DerivationTree.py">
       <SubType>Code</SubType>
     </Compile>

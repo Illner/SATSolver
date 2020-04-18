@@ -4,6 +4,7 @@ from itertools import chain
 from ClauseLearningEnum import ClauseLearningEnum
 from RestartStrategyEnum import RestartStrategyEnum
 from UnitPropagationEnum import UnitPropagationEnum
+from DecisionHeuristicEnum import DecisionHeuristicEnum
 from ClauseDeletionHeuristicEnum import ClauseDeletionHowHeuristicEnum
 from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 
@@ -16,6 +17,7 @@ class CNF:
     def __init__(self, DIMACS_format, original_variable_dictionary = {}, 
                  unit_propagation_enum = UnitPropagationEnum.AdjacencyList,
                  clause_learning_enum = ClauseLearningEnum.none,
+                 decision_heuristic_enum = DecisionHeuristicEnum.Greedy,
                  clause_deletion_how_heuristic_enum = ClauseDeletionHowHeuristicEnum.none, 
                  clause_deletion_when_heuristic_enum = ClauseDeletionWhenHeuristicEnum.none, 
                  restart_strategy_enum = RestartStrategyEnum.none):
@@ -31,6 +33,7 @@ class CNF:
         List<Tuple<int, int>> partial_assignment_list
         HashSet<int> partial_assignment_only_literals_hashset
         UnitPropagationEnum unit_propagation_enum
+        DecisionHeuristicEnum decision_heuristic_enum
         ClauseDeletionHowHeuristicEnum clause_deletion_how_heuristic_enum
         ClauseDeletionWhenHeuristicEnum clause_deletion_when_heuristic_enum
         ClauseLearningEnum clause_learning_enum
@@ -72,6 +75,7 @@ class CNF:
         self.__variable_level_dictionary = {}
         self.__unit_propagation_enum = unit_propagation_enum
         self.__partial_assignment_only_literals_hashset = set()
+        self.__decision_heuristic_enum = decision_heuristic_enum
         self.__original_variable_dictionary = copy.deepcopy(original_variable_dictionary)
 
         # Learned clauses
@@ -265,17 +269,43 @@ class CNF:
 
         return True
 
-    def undefined_variables(self, check_partial_assignment = False):
+    def undefined_variables_list(self, check_partial_assignment = False):
         """
         Returns a list of variables which are undefined in the partial assignment
         """
 
         if (check_partial_assignment and not(self.__check_partial_assignment())):
             raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment_list))
-
+        
         return list(filter(lambda x: (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset), self.__variable_list))
+        
+    def first_undefined_variable(self):
+        """
+        If undefined variable does not exist returns None
+        """
+
+        if (not self.exists_undefined_variable()):
+            return None
+
+        for x in self.__undefined_literals_hashset:
+            # Positive literal => variable
+            if (x > 0):
+                return x
+
+    def exists_undefined_variable(self):
+        if (self.__undefined_literals_hashset):
+            return True
+
+        return False
 
     def unit_propagation(self):
+        """
+        1) Learned clauses are not supported
+            Return true if a contradiction occurs, otherwise false
+        2) Learned clauses are supported
+            Return new decision level (assertive level) if a contradiction occurs, otherwise None
+        """
+
         temp_contradiction = None
 
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
@@ -621,7 +651,7 @@ class CNF:
         for (i, x) in enumerate(self.__learned_clause_watched_literals_list):
             yield (x, i, False)
 
-    # decision level
+    # Decision level
     def increment_current_decision_level(self, number = 1):
         self.__current_decision_level += number
 
@@ -986,8 +1016,15 @@ class CNF:
 
         return resolvent
 
-    # Test
-    def get_undefined_literal(self):
+    # Decision variable
+    def decision_literal(self):
+        # Greedy decision literal
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.Greedy):
+            return self.__decision_literal_greedy()
+
+        raise MyException.UndefinedClauseLearningCnfException(str(self.__decision_heuristic_enum))
+    
+    def __decision_literal_greedy(self):
         for clause in self.__cnf:
             if (any(x in self.__partial_assignment_only_literals_hashset for x in clause)):
                 continue
@@ -995,6 +1032,11 @@ class CNF:
             for x in clause:
                 if (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset):
                     return x
+
+        if (self.exists_undefined_variable()):
+          return self.first_undefined_variable()
+
+        return None
 
     # Property
     @property

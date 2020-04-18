@@ -75,14 +75,11 @@ class DPLL:
 
             return False
 
-        undefined_variables_list = self.__cnf.undefined_variables()
-
         # CNF is satisfied
-        if (not undefined_variables_list):
+        if (not self.__cnf.exists_undefined_variable()):
             return True
-
-        # variable = random.choice(undefined_variables_list)
-        variable = undefined_variables_list[0]
+        
+        variable = self.__cnf.first_undefined_variable()
 
         # +variable
         self.__cnf.add_literal_to_partial_assignment(variable)
