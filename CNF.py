@@ -100,7 +100,7 @@ class CNF:
             self.__antecedent_dictionary = {}
             self.__active_learned_clause_hashset = set()
             # Keep active
-            if (self.__is_keep_active_clauses_heuristic):
+            if (self.__is_keep_active_clauses_heuristic()):
                 self.__active_counter_learned_clause_dictionary = {}
 
             # Restart
@@ -361,6 +361,13 @@ class CNF:
 
         (clause_id, is_original_clause) = temp_contradiction
 
+        # Update active_counter_learned_clause_dictionary
+        if (self.__is_keep_active_clauses_heuristic() and not is_original_clause):
+            if (clause_id not in self.__active_counter_learned_clause_dictionary):
+                self.__active_counter_learned_clause_dictionary[clause_id] = 1
+            else:
+                self.__active_counter_learned_clause_dictionary[clause_id] += 1
+
         temp_contradiction_clause = []
         if (is_original_clause):
             temp_contradiction_clause = self.__cnf[clause_id]
@@ -370,13 +377,13 @@ class CNF:
         if (self.__clause_learning_enum == ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent):
             assertive_clause = self.__create_assertive_clause(temp_contradiction_clause)
             assertive_level = self.__get_assertive_level(assertive_clause)
-            self.add_learned_clause(assertive_clause)
+            self.__add_learned_clause(assertive_clause)
             return assertive_level
 
         if (self.__clause_learning_enum == ClauseLearningEnum.StopAtTheFirstUIP):
             assertive_clause = self.__create_assertive_clause_with_1_uip(temp_contradiction_clause)
             assertive_level = self.__get_assertive_level(assertive_clause)
-            self.add_learned_clause(assertive_clause)
+            self.__add_learned_clause(assertive_clause)
             return assertive_level
 
         raise MyException.UndefinedClauseLearningCnfException(str(self.__clause_learning_enum))
@@ -714,18 +721,14 @@ class CNF:
         learned_clause = self.__learned_clauses[learned_clause_id]
         return (list(filter(lambda x: (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset), learned_clause)))
 
-    def add_learned_clause(self, learned_clause):
+    def __add_learned_clause(self, learned_clause):
         # Check if the learned clause has valid literals
-        if(not(all(x in self.__literal_list for x in learned_clause))):
+        if (not(all(x in self.__literal_list for x in learned_clause))):
             raise MyException.InvalidLiteralInLearnedClauseCnfException("Invalid literal in learned clause: {0}".format(learned_clause))
         
         # Learned clause is empty
         if (not learned_clause):
             return
-
-        for x in learned_clause:
-            if (-x not in self.__partial_assignment_only_literals_hashset):
-                raise MyException.SomethingWrongException("{0} is not unsatisfied".format(x))
 
         learned_clause_id = self.__number_of_learned_clauses
         self.__number_of_learned_clauses += 1
@@ -794,82 +797,21 @@ class CNF:
         else:
             raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
-    def remove_learned_clause(self, learned_clause_id):
-        # Check if the learned clause exists
-        if (learned_clause_id >= self.__number_of_learned_clauses):
-            raise MyException.LearnedClauseIdDoesNotExistCnfException("Number of learned clauses: {0}, learned clause ID: {1}".format(self.__number_of_learned_clauses, learned_clause_id))
+    def __remove_learned_clauses(self, learned_clauses_list):
+        # TODO remove learned clauses
+        pass
 
-        # Adjacency list
-        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
-            del self.__counter_learned_clause_list[learned_clause_id]
+    def __remove_all_learned_clauses(self):
+        # Check if all learned clauses are not active
+        if (self.__active_learned_clause_hashset):
+            raise MyException.AttemptToDeleteActiveLearnedClauseCnfException()
 
-            # Update adjacency_list_learned_clause_dictionary
-            for variable in self.__adjacency_list_learned_clause_dictionary:
-                temp_new_hashSet = set()
-                for i in self.__adjacency_list_learned_clause_dictionary[variable]:
-                    if (i > learned_clause_id):
-                        temp_new_hashSet.add(i - 1)
-                    elif (i < learned_clause_id):
-                        temp_new_hashSet.add(i)
-
-                self.__adjacency_list_learned_clause_dictionary[variable] = temp_new_hashSet
-
-            # Update unit_learned_clause_list
-            if (len(self.__unit_learned_clause_list)):
-                temp_unit_clause_list = []
-                for i in self.__unit_learned_clause_list:
-                    if (i > learned_clause_id):
-                        temp_unit_clause_list.append(i - 1)
-                    elif (i < learned_clause_id):
-                        temp_unit_clause_list.append(i)
-
-                self.__unit_learned_clause_list = temp_unit_clause_list
-
-            # Update contradiction_learned_clause_list
-            if (len(self.__contradiction_learned_clause_list)):
-                temp_contradiction_list = []
-                for i in self.__contradiction_learned_clause_list:
-                    if (i > learned_clause_id):
-                        temp_contradiction_list.append(i - 1)
-                    elif (i < learned_clause_id):
-                        temp_contradiction_list.append(i)
-
-                self.__contradiction_learned_clause_list = temp_contradiction_list
-
-        # Watched literals
-        elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
-            del self.__learned_clause_watched_literals_list[learned_clause_id]
-
-            # Update variable_watched_literals_learned_clause_dictionary
-            for variable in self.__variable_watched_literals_learned_clause_dictionary:
-                temp_positive_hashset = set()
-                temp_negative_hashset = set()
-
-                # Positive set
-                for i in self.__variable_watched_literals_learned_clause_dictionary[variable][0]:
-                    if (i > learned_clause_id):
-                        temp_positive_hashset.add(i - 1)
-                    elif (i < learned_clause_id):
-                        temp_positive_hashset.add(i)
-
-                # Negative set
-                for i in self.__variable_watched_literals_learned_clause_dictionary[variable][1]:
-                    if (i > learned_clause_id):
-                        temp_negative_hashset.add(i - 1)
-                    elif (i < learned_clause_id):
-                        temp_negative_hashset.add(i)
-
-                self.__variable_watched_literals_learned_clause_dictionary[variable] = (temp_positive_hashset, temp_negative_hashset)
-
-        else:
-            raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
-
-        self.__number_of_learned_clauses -= 1
-        del self.__learned_clauses[learned_clause_id]
-
-    def remove_all_learned_clauses(self):
         self.__number_of_learned_clauses = 0
         self.__learned_clauses = []
+
+        # Keep active
+        if (self.__is_keep_active_clauses_heuristic()):
+            self.__active_counter_learned_clause_dictionary = {}
 
         # Adjacency list
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
@@ -886,6 +828,7 @@ class CNF:
             self.__variable_watched_literals_learned_clause_dictionary = {}
             for variable in self.__variable_list:
                 self.__variable_watched_literals_learned_clause_dictionary[variable] = (set(), set())
+
         else:
             raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
@@ -899,14 +842,52 @@ class CNF:
         # Update active_learned_clause_hashset
         self.__active_learned_clause_hashset.add(clause_id)
 
-        # Update active_counter_learned_clause_dictionary
-        if (self.__is_keep_active_clauses_heuristic):
-            if (clause_id not in self.__active_counter_learned_clause_dictionary):
-                self.__active_counter_learned_clause_dictionary[clause_id] = 1
-            else:
-                self.__active_counter_learned_clause_dictionary[clause_id] += 1
+    # Clause deletion (how)
+    def clause_deletion(self):
+        # None
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.none):
+            return
 
-    # Learned clauses - heuristics
+        # Keep active clauses
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses):
+            learned_clauses_to_delete = self.__keep_active_clauses_heuristic()
+            self.__remove_learned_clauses(learned_clauses_to_delete)
+            return
+
+        # Keep short clauses
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepShortClauses):
+            learned_clauses_to_delete = self.__keep_short_clauses_heuristic()
+            self.__remove_learned_clauses(learned_clauses_to_delete)
+            return
+
+        # Remove subsumed clauses
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.RemoveSubsumedClauses):
+            learned_clauses_to_delete = self.__remove_subsumed_clauses_heuristic()
+            self.__remove_learned_clauses(learned_clauses_to_delete)
+            return
+
+        # Keep active clauses and remove subsumed clauses
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses):
+            learned_clauses_to_delete = self.__keep_active_clauses_heuristic()
+            self.__remove_learned_clauses(learned_clauses_to_delete)
+            learned_clauses_to_delete = self.__remove_subsumed_clauses_heuristic()
+            self.__remove_learned_clauses(learned_clauses_to_delete)
+            return
+
+        raise MyException.UndefinedClauseDeletionHowHeuristicCnfException(str(self.__clause_deletion_how_heuristic_enum))
+
+    def __keep_short_clauses_heuristic(self):
+        # TODO keep short clauses heuristic
+        pass
+
+    def __keep_active_clauses_heuristic(self):
+        # TODO keep active clauses heuristic
+        pass
+
+    def __remove_subsumed_clauses_heuristic(self):
+        # TODO remove subsumed clauses heuristic
+        pass
+
     def __remove_subsumed_clauses_heuristic(self, learned_clause):
         is_subset = self.__is_subset_new_learned_clause(learned_clause)
 
@@ -966,8 +947,7 @@ class CNF:
         """
 
         if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.RemoveSubsumedClauses or
-            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses or 
-            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepShortClausesAndRemoveSubsumedClauses):
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses):
             return True
 
         return False
@@ -1192,14 +1172,14 @@ class CNF:
                 if (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset):
                     literal_hashset.add(x)
 
+        if (literal_hashset):
+            return random.sample(literal_hashset, 1)[0]
+
         for x in self.__undefined_literals_hashset:
             if ((x not in self.__partial_assignment_list) and (-x not in self.__partial_assignment_list) and (-x is not literal_hashset)):
-                literal_hashset.add(x)
+                return x
 
-        if (not literal_hashset):
-            return None
-
-        return random.sample(literal_hashset, 1)[0]
+        return None
 
     # Property
     @property

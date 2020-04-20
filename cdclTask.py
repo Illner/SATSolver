@@ -54,14 +54,14 @@ try:
         tseitinEncoding = TseitinEncoding(derivationTree)
         cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
-                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
                   clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.none, 
                   restart_strategy_enum=RestartStrategyEnum.none)
     else:
         cnf = CNF(input_formula, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
-                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
                   clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.none, 
                   restart_strategy_enum=RestartStrategyEnum.none)

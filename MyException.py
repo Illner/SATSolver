@@ -166,3 +166,22 @@ class UndefinedRestartStrategyCnfException(Exception):
             super().__init__("Undefined restart strategy")
         else:
             super().__init__("Undefined restart strategy: " + message)
+
+class AttemptToDeleteActiveLearnedClauseCnfException(Exception):
+    """
+    Attempt to delete active learned clause
+    """
+
+    def __init__(self):
+        super().__init__()
+
+class UndefinedClauseDeletionHowHeuristicCnfException(Exception):
+    """
+    Undefined clause deletion (how) heuristic
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Undefined clause deletion (how) heuristic")
+        else:
+            super().__init__("Undefined clause deletion (how) heuristic: " + message)
