@@ -24,7 +24,7 @@
     <Compile Include="CDCL.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="cdclTask.py">
+    <Compile Include="cdclAlgorithm.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ClauseDeletionHeuristicEnum.py">
@@ -45,13 +45,25 @@
     <Compile Include="DPLL.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="dpllTask.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Example.py">
+    <Compile Include="dpllAlgorithm.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="formula2cnf.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GenerateStatistics\ClauseDeletionHowHeuristic.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GenerateStatistics\ClauseLearning.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GenerateStatistics\ClauseDeletionWhenHeuristic.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GenerateStatistics\DPLLvsCDCL.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GenerateStatistics\RestartStrategy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LogicalSignEnum.py">
@@ -70,9 +82,12 @@
     <Compile Include="UnitPropagationEnum.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UnitPropagationTest.py">
+    <Compile Include="GenerateStatistics\UnitPropagationDataStructures.py">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GenerateStatistics\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

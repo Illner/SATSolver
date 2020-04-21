@@ -28,8 +28,8 @@ class CNF:
                  first_term_geometric_cache_clause_deletion = 100, # Clause deletion - cache (geometric)
                  common_ratio_geometric_cache_clause_deletion = 1.5, # Clause deletion - cache (geometric)
                  restart_strategy_enum = RestartStrategyEnum.none,
-                 first_term_geometric_restart_strategy = 100, # Restart
-                 common_ratio_geometric_restart_strategy = 1.5 # Restart
+                 first_term_geometric_restart_strategy = 100, # Restart - GeometricStrategy
+                 common_ratio_geometric_restart_strategy = 1.5 # Restart - GeometricStrategy
                  ):
         """
         List<List<int>> cnf

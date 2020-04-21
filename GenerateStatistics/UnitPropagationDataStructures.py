@@ -1,15 +1,19 @@
 import os
 import random
+import matplotlib.pyplot as plt
+
+import sys
+sys.path.insert(0, '../')
+
 import MyException
 from CNF import CNF
 from DPLL import DPLL
-import matplotlib.pyplot as plt
 from DerivationTree import DerivationTree
 from LogicalSignEnum import LogicalSignEnum
 from TseitinEncoding import TseitinEncoding
 from UnitPropagationEnum import UnitPropagationEnum
 
-path = os.path.join(os.path.dirname(__file__), 'CNF')
+path = os.path.join(os.path.dirname(__file__), '../CNF')
 dictionary_list = ["20-91", "50-218", "75-325", "100-430"]
 # dictionary_list = ["JNH"]
 x_axis_variables = [20, 50, 75, 100]
@@ -45,7 +49,7 @@ for i in range(len(dictionary_list)):
             input_formula = input_file.read()
 
         # Adjacency list
-        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList, )
+        cnf = CNF(input_formula, unit_propagation_enum=UnitPropagationEnum.AdjacencyList)
         dpll = DPLL(cnf)
         result = dpll.DPLL()
 
