@@ -17,22 +17,35 @@ cdclAlgorithm.py [-ClauseLearning=X] [RestartStrategy=X] [-ClauseDeletionWhenHeu
 
 ### ClauseLearning ###
 1 - stop at the first UIP (**DEFAULT**)
+
 2 - stop when the literal at current decision level has no antecedent
 
 ### RestartStrategy ###
+How to determine when the search should be restarted:
+
 1 - Luby strategy (**DEFAULT**)
+
 2 - geometric strategy
 
 ### ClauseDeletionWhenHeuristic ###
+How to determine when the learned clauses should be deleted:
+
 1 - at the time of restart (**DEFAULT**)
+
 2 - when the current cache is full
 
 ### ClauseDeletionHowHeuristic ###
+A heuristic for regularly deleting some of the learned clauses:
+
 1 - remove subsumed clauses
+
 2 - keep short clauses
+
 3 - keep active clauses (**DEFAULT**)
+
 4 - keep active clauses and remove subsumed clauses
 
 ### DecisionHeuristic ###
 1 - first literal, which is found, is used (**DEFAULT**)
+
 2 - literal is picked randomly
