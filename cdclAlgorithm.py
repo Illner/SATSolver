@@ -16,19 +16,90 @@ cnf = None
 input_path = None
 DIMACS_format = None
 
+clause_learning = ClauseLearningEnum.StopAtTheFirstUIP
+restart_strategy = RestartStrategyEnum.LubyStrategy
+clause_deletion_when_heuristic = ClauseDeletionWhenHeuristicEnum.Restart
+clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses
+decision_heuristic = DecisionHeuristicEnum.Greedy
+
+def is_valid_parameter(x, lower_bound = 1, upper_bound = 2):
+    """
+    Return None if x is not a number or is not in <lower_bound, upper_bound>, otherwise return x
+    """
+    
+    # x is not a number
+    if (not x.isnumeric()):
+        return None
+
+    number = int(x)
+    # x is not in <lower_bound, upper_bound>
+    if (number < lower_bound or number > upper_bound):
+        return None
+
+    return number
+
 try:
     # Read arguments
-    if ((len(sys.argv) == 1) or (len(sys.argv) > 3)):
-        raise MyException.InvalidArgumentsDPLLTaskException("Invalid number of arguments")
+    if ((len(sys.argv) == 1) or (len(sys.argv) > 8)):
+        raise MyException.InvalidArgumentsCDCLException("Invalid number of arguments")
 
     for i in range(1, len(sys.argv)):
         if (sys.argv[i] == "-DIMACS"):
             DIMACS_format = True
         elif (sys.argv[i] == "-SMT-LIB"):
             DIMACS_format = False
+        # ClauseLearning
+        elif (sys.argv[i].startswith("-ClauseLearning=")):
+            number = is_valid_parameter(sys.argv[i][len("-ClauseLearning="):])
+            if (number is None):
+                raise MyException.InvalidArgumentsCDCLException("ClauseLearning")
+            if (number == 1):
+                clause_learning = ClauseLearningEnum.StopAtTheFirstUIP
+            else:
+                clause_learning = ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent
+        # RestartStrategy
+        elif (sys.argv[i].startswith("-RestartStrategy=")):
+            number = is_valid_parameter(sys.argv[i][len("-RestartStrategy="):])
+            if (number is None):
+                raise MyException.InvalidArgumentsCDCLException("RestartStrategy")
+            if (number == 1):
+                restart_strategy = RestartStrategyEnum.LubyStrategy
+            else:
+                restart_strategy = RestartStrategyEnum.GeometricStrategy
+        # ClauseDeletionWhenHeuristic
+        elif (sys.argv[i].startswith("-ClauseDeletionWhenHeuristic=")):
+            number = is_valid_parameter(sys.argv[i][len("-ClauseDeletionWhenHeuristic="):])
+            if (number is None):
+                raise MyException.InvalidArgumentsCDCLException("ClauseDeletionWhenHeuristic")
+            if (number == 1):
+                clause_deletion_when_heuristic = ClauseDeletionWhenHeuristicEnum.Restart
+            else:
+                clause_deletion_when_heuristic = ClauseDeletionWhenHeuristicEnum.CacheFull
+        # DecisionHeuristic
+        elif (sys.argv[i].startswith("-DecisionHeuristic=")):
+            number = is_valid_parameter(sys.argv[i][len("-DecisionHeuristic="):])
+            if (number is None):
+                raise MyException.InvalidArgumentsCDCLException("DecisionHeuristic")
+            if (number == 1):
+                decision_heuristic = DecisionHeuristicEnum.Greedy
+            else:
+                decision_heuristic = DecisionHeuristicEnum.Random
+        # ClauseDeletionHowHeuristic
+        elif (sys.argv[i].startswith("-ClauseDeletionHowHeuristic=")):
+            number = is_valid_parameter(sys.argv[i][len("-ClauseDeletionHowHeuristic="):], upper_bound=4)
+            if (number is None):
+                raise MyException.InvalidArgumentsCDCLException("ClauseDeletionHowHeuristic")
+            if (number == 1):
+                clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.RemoveSubsumedClauses
+            elif (number == 2):
+                clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepShortClauses
+            elif (number == 3):
+                clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses
+            else:
+                clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses
         else:
             if (input_path is not None):
-                raise MyException.InvalidArgumentsDPLLTaskException()
+                raise MyException.InvalidArgumentsCDCLException()
             else:
                 input_path = sys.argv[i]
         
@@ -54,19 +125,19 @@ try:
         tseitinEncoding = TseitinEncoding(derivationTree)
         cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
-                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
-                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
-                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses, 
-                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.CacheFull,
-                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
+                  decision_heuristic_enum=decision_heuristic,
+                  clause_learning_enum=clause_learning, 
+                  clause_deletion_how_heuristic_enum=clause_deletion_how_heuristic, 
+                  clause_deletion_when_heuristic_enum=clause_deletion_when_heuristic,
+                  restart_strategy_enum=restart_strategy)
     else:
         cnf = CNF(input_formula, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
-                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
-                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
-                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses,
-                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.CacheFull,
-                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
+                  decision_heuristic_enum=decision_heuristic,
+                  clause_learning_enum=clause_learning, 
+                  clause_deletion_how_heuristic_enum=clause_deletion_how_heuristic,
+                  clause_deletion_when_heuristic_enum=clause_deletion_when_heuristic,
+                  restart_strategy_enum=restart_strategy)
         
     cdcl = CDCL(cnf)
     result = cdcl.CDCL()
@@ -91,7 +162,7 @@ try:
     if (not cnf.verify(result)):
         raise MyException.SomethingWrongException("Invalid model")
 
-except (MyException.InvalidArgumentsDPLLTaskException, 
+except (MyException.InvalidArgumentsCDCLException, 
         MyException.MissingOperandDerivationTreeException, 
         MyException.MissingOperatorDerivationTreeException, 
         MyException.InvalidDIMACSFormatException,
@@ -100,3 +171,6 @@ except (MyException.InvalidArgumentsDPLLTaskException,
     print(e)
 except FileNotFoundError:
     print("Input file does not exist")
+except Exception as e:
+    print("Something wrong")
+    print(e)

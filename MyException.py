@@ -88,12 +88,12 @@ class SomethingWrongException(Exception):
 
 class InvalidArgumentsDPLLTaskException(Exception):
     """
-    Invalid arguments - dpllTask.py
+    Invalid arguments - dpllAlgorithm.py
     """
 
     def __init__(self, message = ""):
         if (message == ""):
-            super().__init__("Invalid arguments\ndpllTask.py [-DIMACS | -SMT-LIB] input_path")
+            super().__init__("Invalid arguments\ndpllAlgorithm.py [-DIMACS | -SMT-LIB] input_path")
         else: 
             super().__init__(message)
 
@@ -196,3 +196,14 @@ class UndefinedClauseDeletionWhenHeuristicCnfException(Exception):
             super().__init__("Undefined clause deletion (when) heuristic")
         else:
             super().__init__("Undefined clause deletion (when) heuristic: " + message)
+
+class InvalidArgumentsCDCLException(Exception):
+    """
+    Invalid arguments - cdclAlgorithm.py
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Invalid arguments\ncdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-DIMACS | -SMT-LIB] input_path")
+        else: 
+            super().__init__(message)

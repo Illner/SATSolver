@@ -48,4 +48,4 @@ A heuristic for regularly deleting some of the learned clauses:
 ### DecisionHeuristic ###
 1 - first literal, which is found, is used (**DEFAULT**)
 
-2 - literal is picked randomly
+2 - literal is picked randomly (all pickable literals have same weights)
