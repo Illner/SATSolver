@@ -51,11 +51,12 @@ for i in range(len(dictionary_list)):
 
         # Adjacency list
         cnf = CNF(input_formula, 
-                  unit_propagation_enum=UnitPropagationEnum.AdjacencyList,
+                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
                   decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
-                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClauses, 
-                  restart_strategy_enum=RestartStrategyEnum.GeometricStrategy)
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses,
+                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.none,
+                  restart_strategy_enum=RestartStrategyEnum.none)
 
         cdcl = CDCL(cnf)
         result = cdcl.CDCL()
@@ -79,9 +80,10 @@ for i in range(len(dictionary_list)):
         cnf = CNF(input_formula,
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
                   decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
-                  clause_learning_enum=ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent, 
-                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses, 
-                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
+                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.RemoveSubsumedClauses, 
+                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.none,
+                  restart_strategy_enum=RestartStrategyEnum.GeometricStrategy)
 
         cdcl = CDCL(cnf)
         result = cdcl.CDCL()

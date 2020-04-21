@@ -56,15 +56,17 @@ try:
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
                   decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
-                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.none, 
-                  restart_strategy_enum=RestartStrategyEnum.none)
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses, 
+                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.CacheFull,
+                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
     else:
         cnf = CNF(input_formula, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
                   decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
-                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.none, 
-                  restart_strategy_enum=RestartStrategyEnum.none)
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepShortClauses,
+                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.CacheFull,
+                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
         
     cdcl = CDCL(cnf)
     result = cdcl.CDCL()
@@ -73,6 +75,8 @@ try:
     print("Number of decisions: " + str(cdcl.number_of_decisions))
     print("Number of steps of unit propagation: " + str(cdcl.number_of_steps_of_unit_propagation))
     print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
+    print("Number of deleted learned clauses: " + str(cnf.number_of_deleted_learned_clauses))
+    print("Number of clause deletions: " + str(cnf.number_of_clause_deletions))
 
     if (result is None):
         print("-----")

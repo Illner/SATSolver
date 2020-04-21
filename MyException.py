@@ -185,3 +185,14 @@ class UndefinedClauseDeletionHowHeuristicCnfException(Exception):
             super().__init__("Undefined clause deletion (how) heuristic")
         else:
             super().__init__("Undefined clause deletion (how) heuristic: " + message)
+
+class UndefinedClauseDeletionWhenHeuristicCnfException(Exception):
+    """
+    Undefined clause deletion (when) heuristic
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Undefined clause deletion (when) heuristic")
+        else:
+            super().__init__("Undefined clause deletion (when) heuristic: " + message)

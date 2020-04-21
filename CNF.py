@@ -1,6 +1,7 @@
 import sys
 import copy
 import random
+import operator
 import MyException
 from itertools import chain
 from ClauseLearningEnum import ClauseLearningEnum
@@ -20,9 +21,16 @@ class CNF:
                  unit_propagation_enum = UnitPropagationEnum.AdjacencyList,
                  clause_learning_enum = ClauseLearningEnum.none,
                  decision_heuristic_enum = DecisionHeuristicEnum.Greedy,
-                 clause_deletion_how_heuristic_enum = ClauseDeletionHowHeuristicEnum.none, 
+                 clause_deletion_how_heuristic_enum = ClauseDeletionHowHeuristicEnum.none,
+                 bound_keep_short_clauses_heuristic = 2, # Clause deletion - keep short clauses heuristic
+                 ratio_keep_active_clauses_heuristic = 0.5, # Clause deletion - keep active clauses heuristic
                  clause_deletion_when_heuristic_enum = ClauseDeletionWhenHeuristicEnum.none, 
-                 restart_strategy_enum = RestartStrategyEnum.none):
+                 first_term_geometric_cache_clause_deletion = 100, # Clause deletion - cache (geometric)
+                 common_ratio_geometric_cache_clause_deletion = 1.5, # Clause deletion - cache (geometric)
+                 restart_strategy_enum = RestartStrategyEnum.none,
+                 first_term_geometric_restart_strategy = 100, # Restart
+                 common_ratio_geometric_restart_strategy = 1.5 # Restart
+                 ):
         """
         List<List<int>> cnf
         int number_of_clauses
@@ -65,6 +73,16 @@ class CNF:
         double common_ratio_geometric_restart_strategy
         int unit_luby_restart_strategy
         Iterator restart_strategy_iterator
+
+        int number_of_clause_deletions
+        int number_of_deleted_learned_clauses
+        int bound_keep_short_clauses_heuristic
+        int ratio_keep_active_clauses_heuristic
+
+        int first_term_geometric_cache_clause_deletion
+        int common_ratio_geometric_cache_clause_deletion
+        Iterator clause_deletion_when_heuristic_iterator
+        int max_size_of_cache
 
         List<int> unit_learned_clause_list
         List<int> contradiction_learned_clause_list
@@ -110,14 +128,77 @@ class CNF:
 
                 # Geometric strategy
                 if (self.__restart_strategy_enum == RestartStrategyEnum.GeometricStrategy):
-                    self.__first_term_geometric_restart_strategy = 100
-                    self.__common_ratio_geometric_restart_strategy = 1.5
+                    # first_term_geometric_restart_strategy is not a number
+                    if (not isinstance(first_term_geometric_restart_strategy, int)):
+                        raise MyException.InvalidParametersCnfException("first_term_geometric_restart_strategy ({0}) is not a number".format(first_term_geometric_restart_strategy))
+                    # first_term_geometric_restart_strategy is invalid
+                    if (first_term_geometric_restart_strategy < 0):
+                        raise MyException.InvalidParametersCnfException("first_term_geometric_restart_strategy ({0}) is less than 0".format(first_term_geometric_restart_strategy))
+
+                    self.__first_term_geometric_restart_strategy = first_term_geometric_restart_strategy
+
+                    # common_ratio_geometric_restart_strategy is not a number
+                    if (not isinstance(common_ratio_geometric_restart_strategy, float) and not isinstance(common_ratio_geometric_restart_strategy, int)):
+                        raise MyException.InvalidParametersCnfException("common_ratio_geometric_restart_strategy ({0}) is not a number".format(common_ratio_geometric_restart_strategy))
+                    # common_ratio_geometric_restart_strategy is invalid
+                    if (common_ratio_geometric_restart_strategy <= 1):
+                        raise MyException.InvalidParametersCnfException("common_ratio_geometric_restart_strategy ({0}) is not greater than 1".format(common_ratio_geometric_restart_strategy))
+
+                    self.__common_ratio_geometric_restart_strategy = common_ratio_geometric_restart_strategy
                 # Luby strategy
                 if (self.__restart_strategy_enum == RestartStrategyEnum.LubyStrategy):
                     self.__unit_luby_restart_strategy = 100
 
                 self.__restart_strategy_iterator = self.__get_restart_strategy_iterator()
                 self.__max_number_of_conflicts = next(self.__restart_strategy_iterator)
+
+            # Clause deletion (how)
+            if (self.__clause_deletion_how_heuristic_enum != ClauseDeletionHowHeuristicEnum.none):
+                self.__number_of_clause_deletions = 0
+                self.__number_of_deleted_learned_clauses = 0
+            # Keep short clauses
+            if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepShortClauses):
+                # bound_keep_short_clauses_heuristic is not a number
+                if (not isinstance(bound_keep_short_clauses_heuristic, int)):
+                    raise MyException.InvalidParametersCnfException("bound_keep_short_clauses_heuristic ({0}) is not a number".format(bound_keep_short_clauses_heuristic))
+                # bound_keep_short_clauses_heuristic is invalid
+                if (bound_keep_short_clauses_heuristic < 0):
+                    raise MyException.InvalidParametersCnfException("bound_keep_short_clauses_heuristic ({0}) is less than 0".format(bound_keep_short_clauses_heuristic))
+
+                self.__bound_keep_short_clauses_heuristic = bound_keep_short_clauses_heuristic
+            if (self.__is_keep_active_clauses_heuristic()):
+                # ratio_keep_active_clauses_heuristic is not a number
+                if (not isinstance(ratio_keep_active_clauses_heuristic, float) and not isinstance(ratio_keep_active_clauses_heuristic, int)):
+                    raise MyException.InvalidParametersCnfException("ratio_keep_active_clauses_heuristic ({0}) is not a number".format(ratio_keep_active_clauses_heuristic))
+                # ratio_keep_active_clauses_heuristic is invalid
+                if (ratio_keep_active_clauses_heuristic < 0 or ratio_keep_active_clauses_heuristic > 1):
+                    raise MyException.InvalidParametersCnfException("ratio_keep_active_clauses_heuristic ({0}) is not in <0; 1>".format(ratio_keep_active_clauses_heuristic))
+
+                self.__ratio_keep_active_clauses_heuristic = ratio_keep_active_clauses_heuristic
+
+            # Clause deletion (when) - cache
+            if (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.CacheFull):
+                # first_term_geometric_cache_clause_deletion is not a number
+                if (not isinstance(first_term_geometric_cache_clause_deletion, int)):
+                    raise MyException.InvalidParametersCnfException("first_term_geometric_cache_clause_deletion ({0}) is not a number".format(first_term_geometric_cache_clause_deletion))
+                # first_term_geometric_cache_clause_deletion is invalid
+                if (first_term_geometric_cache_clause_deletion < 0):
+                    raise MyException.InvalidParametersCnfException("first_term_geometric_cache_clause_deletion ({0}) is less than 0".format(first_term_geometric_cache_clause_deletion))
+
+                self.__first_term_geometric_cache_clause_deletion = first_term_geometric_cache_clause_deletion
+
+                # common_ratio_geometric_cache_clause_deletion is not a number
+                if (not isinstance(common_ratio_geometric_cache_clause_deletion, float) and not isinstance(common_ratio_geometric_cache_clause_deletion, int)):
+                    raise MyException.InvalidParametersCnfException("common_ratio_geometric_cache_clause_deletion ({0}) is not a number".format(common_ratio_geometric_cache_clause_deletion))
+                # common_ratio_geometric_cache_clause_deletion is invalid
+                if (common_ratio_geometric_cache_clause_deletion <= 1):
+                    raise MyException.InvalidParametersCnfException("common_ratio_geometric_cache_clause_deletion ({0}) is not greater than 1".format(common_ratio_geometric_cache_clause_deletion))
+
+                self.__common_ratio_geometric_cache_clause_deletion = common_ratio_geometric_cache_clause_deletion
+            # Clause deletion (when)
+            if (self.__has_clause_deletion_when_heuristic()):
+                self.__clause_deletion_when_iterator = self.__get_clause_deletion_when_iterator()
+                self.__max_size_of_cache = next(self.__clause_deletion_when_iterator)
 
         # Check if parameters are valid
         if (not self.__use_learned_clauses and (not (self.__restart_strategy_enum == RestartStrategyEnum.none) or not (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.none) or not (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.none))):
@@ -354,6 +435,8 @@ class CNF:
             return None
 
         # Learned clauses are supported - Contradiction
+        
+        # Restart
         if (self.__has_restart()):
             self.__increment_number_of_conflicts()
             if (self.__restart()):
@@ -378,15 +461,23 @@ class CNF:
             assertive_clause = self.__create_assertive_clause(temp_contradiction_clause)
             assertive_level = self.__get_assertive_level(assertive_clause)
             self.__add_learned_clause(assertive_clause)
+            self.__unit_propagation_clause_deletion()
             return assertive_level
 
         if (self.__clause_learning_enum == ClauseLearningEnum.StopAtTheFirstUIP):
             assertive_clause = self.__create_assertive_clause_with_1_uip(temp_contradiction_clause)
             assertive_level = self.__get_assertive_level(assertive_clause)
             self.__add_learned_clause(assertive_clause)
+            self.__unit_propagation_clause_deletion()
             return assertive_level
 
         raise MyException.UndefinedClauseLearningCnfException(str(self.__clause_learning_enum))
+
+    def __unit_propagation_clause_deletion(self):
+        if (self.__has_clause_deletion_when_heuristic()):
+            if (self.__max_size_of_cache <= self.__number_of_learned_clauses):
+                self.__max_size_of_cache = next(self.__clause_deletion_when_iterator)
+                self.__clause_deletion()
 
     def __unit_propagation_adjacency_list(self):
         temp_contradiction = None
@@ -797,9 +888,125 @@ class CNF:
         else:
             raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
-    def __remove_learned_clauses(self, learned_clauses_list):
-        # TODO remove learned clauses
-        pass
+    def __remove_learned_clauses(self, learned_clauses_to_delete_list):
+        self.__increment_number_of_deleted_learned_clauses(len(learned_clauses_to_delete_list))
+        learned_clauses_to_delete_list = sorted(learned_clauses_to_delete_list)
+        learned_clauses_to_delete_hashset = set()
+
+        for i in learned_clauses_to_delete_list:
+            learned_clauses_to_delete_hashset.add(i)
+
+        temp_list = []
+        for i in range(self.__number_of_learned_clauses):
+            if i not in learned_clauses_to_delete_list:
+                temp_list.append(i)
+
+        # Create mapping
+        map_old_to_new_dictionary = {}
+        map_new_to_old_dictionary = {}
+        for i in range(len(temp_list)):
+            map_old_to_new_dictionary[temp_list[i]] = i
+            map_new_to_old_dictionary[i] = temp_list[i]
+
+        # Learned clauses
+        # learned_clauses and number_of_learned_clauses
+        temp_learned_clauses = []
+        for (learned_clause_id, learned_clause) in enumerate(self.__learned_clauses):
+            if (learned_clause_id not in learned_clauses_to_delete_hashset):
+                temp_learned_clauses.append(learned_clause)
+        self.__learned_clauses = temp_learned_clauses
+        self.__number_of_learned_clauses = len(self.__learned_clauses)
+        # antecedent_dictionary
+        for variable in self.__antecedent_dictionary:
+            temp_antecedent = self.__antecedent_dictionary[variable]
+            if (temp_antecedent is None):
+                continue
+            (clause_id, is_original_clause) = temp_antecedent
+            if (is_original_clause):
+                continue
+            new_index = map_old_to_new_dictionary[clause_id]
+            self.__antecedent_dictionary[variable] = (new_index, is_original_clause)
+        # active_learned_clause_hashset
+        temp_active_learned_clause_hashset = set()
+        for learned_clause_id in self.__active_learned_clause_hashset:
+            new_index = map_old_to_new_dictionary[learned_clause_id]
+            temp_active_learned_clause_hashset.add(new_index)
+        self.__active_learned_clause_hashset = temp_active_learned_clause_hashset
+
+        # Keep active
+        if (self.__is_keep_active_clauses_heuristic()):
+            temp_active_counter_learned_clause_dictionary = {}
+            for learned_clause_id in range(self.__number_of_learned_clauses):
+                old_index = map_new_to_old_dictionary[learned_clause_id]
+                temp_active_counter_learned_clause_dictionary[learned_clause_id] = self.__active_counter_learned_clause_dictionary.get(old_index, 0)
+            self.__active_counter_learned_clause_dictionary = temp_active_counter_learned_clause_dictionary
+
+        # Adjacency list
+        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
+            # counter_learned_clause_list
+            temp_counter_learned_clause_list = []
+            for (learned_clause_id, counter) in enumerate(self.__counter_learned_clause_list):
+                if (learned_clause_id not in learned_clauses_to_delete_hashset):
+                    temp_counter_learned_clause_list.append(counter)
+            self.__counter_learned_clause_list = temp_counter_learned_clause_list
+
+            # adjacency_list_learned_clause_dictionary
+            for variable in self.__adjacency_list_learned_clause_dictionary:
+                temp_hashset = set()
+                for learned_clause_id in self.__adjacency_list_learned_clause_dictionary[variable]:
+                    if (learned_clause_id in learned_clauses_to_delete_hashset):
+                        continue
+
+                    new_index = map_old_to_new_dictionary[learned_clause_id]
+                    temp_hashset.add(new_index)
+                self.__adjacency_list_learned_clause_dictionary[variable] = temp_hashset
+
+            # unit_learned_clause_list
+            temp_unit_learned_clause_list = []
+            for learned_clause_id in self.__unit_learned_clause_list:
+                if (learned_clause_id not in learned_clauses_to_delete_hashset):
+                    new_index = map_old_to_new_dictionary[learned_clause_id]
+                    temp_unit_learned_clause_list.append(new_index)
+            self.__unit_learned_clause_list = temp_unit_learned_clause_list
+
+            # contradiction_learned_clause_list
+            temp_contradiction_learned_clause_list = []
+            for learned_clause_id in self.__contradiction_learned_clause_list:
+                if (learned_clause_id not in learned_clauses_to_delete_hashset):
+                    new_index = map_old_to_new_dictionary[learned_clause_id]
+                    temp_contradiction_learned_clause_list.append(new_index)
+            self.__contradiction_learned_clause_list = temp_contradiction_learned_clause_list
+
+        # Watched literals
+        if (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
+            # learned_clause_watched_literals_list
+            temp_learned_clause_watched_literals_list = []
+            for (learned_clause_id, watched_literals) in enumerate(self.__learned_clause_watched_literals_list):
+                if (learned_clause_id not in learned_clauses_to_delete_hashset):
+                    temp_learned_clause_watched_literals_list.append(watched_literals)
+            self.__learned_clause_watched_literals_list = temp_learned_clause_watched_literals_list
+
+            # variable_watched_literals_learned_clause_dictionary
+            for variable in self.__variable_watched_literals_learned_clause_dictionary:
+                (positive_hashset, negative_hashset) = self.__variable_watched_literals_learned_clause_dictionary[variable]
+                # Positive hashset
+                temp_positive_hashset = set()
+                for learned_clauses_id in positive_hashset:
+                    if (learned_clauses_id in learned_clauses_to_delete_hashset):
+                        continue
+
+                    new_index = map_old_to_new_dictionary[learned_clauses_id]
+                    temp_positive_hashset.add(new_index)
+                # Negative hashset
+                temp_negative_hashset = set()
+                for learned_clauses_id in negative_hashset:
+                    if (learned_clauses_id in learned_clauses_to_delete_hashset):
+                        continue
+
+                    new_index = map_old_to_new_dictionary[learned_clauses_id]
+                    temp_negative_hashset.add(new_index)
+                
+                self.__variable_watched_literals_learned_clause_dictionary[variable] = (temp_positive_hashset, temp_negative_hashset)
 
     def __remove_all_learned_clauses(self):
         # Check if all learned clauses are not active
@@ -843,7 +1050,8 @@ class CNF:
         self.__active_learned_clause_hashset.add(clause_id)
 
     # Clause deletion (how)
-    def clause_deletion(self):
+    def __clause_deletion(self):
+        self.__increment_number_of_clause_deletions()
         # None
         if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.none):
             return
@@ -877,58 +1085,92 @@ class CNF:
         raise MyException.UndefinedClauseDeletionHowHeuristicCnfException(str(self.__clause_deletion_how_heuristic_enum))
 
     def __keep_short_clauses_heuristic(self):
-        # TODO keep short clauses heuristic
-        pass
-
-    def __keep_active_clauses_heuristic(self):
-        # TODO keep active clauses heuristic
-        pass
-
-    def __remove_subsumed_clauses_heuristic(self):
-        # TODO remove subsumed clauses heuristic
-        pass
-
-    def __remove_subsumed_clauses_heuristic(self, learned_clause):
-        is_subset = self.__is_subset_new_learned_clause(learned_clause)
-
-        if (is_subset):
-            return False
-        
-        subsets_list = self.__get_all_learned_clauses_subsets(learned_clause)
-        subsets_list.sort(reverse=True)
-        
-        for learned_clause_id in subsets_list:
-            self.remove_learned_clause(learned_clause_id)
-
-        return True
-
-    def __is_subset_new_learned_clause(self, new_learned_clause):
         """
-        Return true if the new learned clause is a subset of any saved learned clause, otherwise return false
+        Clause deletion - keep short clauses heuristic 
+        Return a list of learned clauses which should be deleted
         """
 
-        for (learned_clause_id, learned_clause) in enumerate(self.__learned_clauses):
-            if(all(x in learned_clause for x in new_learned_clause)):
-                return True
+        learned_clauses_to_delete = []
 
-        return False
-
-    def __get_all_learned_clauses_subsets(self, new_learned_clause):
-        """
-        Return a list of all saved learned clauses which are subsets of new learned clause and are not active
-        """
-
-        temp_list = []
-
-        for (learned_clause_id, learned_clause) in enumerate(self.__learned_clauses):
-            # Clause is active
+        for learned_clause_id in range(self.__number_of_learned_clauses):
+            # Learned clause is active
             if (learned_clause_id in self.__active_learned_clause_hashset):
                 continue
 
-            if(all(x in new_learned_clause for x in learned_clause)):
-                temp_list.append(learned_clause_id)
+            size = len(self.__learned_clauses[learned_clause_id])
+            # Size of learned clause is bounded by k
+            if (size <= self.__bound_keep_short_clauses_heuristic):
+                continue
 
-        return temp_list
+            # Size of learned clause is not bounded by k
+            probability = 1 / (size - self.__bound_keep_short_clauses_heuristic + 1)
+            if (random.random() >= probability):
+                learned_clauses_to_delete.append(learned_clause_id)
+
+        return learned_clauses_to_delete
+
+    def __keep_active_clauses_heuristic(self):
+        """
+        Clause deletion - keep active clauses heuristic
+        Return a list of learned clauses which should be deleted
+        """
+
+        learned_clauses_to_delete = []
+
+        temp_learned_clause_list = [] # [[activity, size, id], ... ]
+        for learned_clause_id in range(self.__number_of_learned_clauses):
+            # Learned clause is active
+            if (learned_clause_id in self.__active_learned_clause_hashset):
+                continue
+            if (learned_clause_id in self.__active_counter_learned_clause_dictionary):
+                activity = self.__active_counter_learned_clause_dictionary[learned_clause_id]
+                activity *= -1 # Hack - we don't need reverse this attribute
+            else:
+                activity = 0
+            size = len(self.__learned_clauses[learned_clause_id])
+            temp_learned_clause_list.append([activity, size, learned_clause_id])
+
+        temp_learned_clause_list = sorted(temp_learned_clause_list, key = operator.itemgetter(0, 1, 2))
+
+        for i in range(int(len(temp_learned_clause_list) * self.__ratio_keep_active_clauses_heuristic), len(temp_learned_clause_list)):
+            learned_clauses_to_delete.append(temp_learned_clause_list[i][2])
+
+        return learned_clauses_to_delete
+
+    def __remove_subsumed_clauses_heuristic(self):
+        """
+        Clause deletion - remove subsumed clauses heuristic
+        Return a list of learned clauses which should be deleted
+        """
+
+        learned_clauses_to_delete = []
+
+        for learned_clause_id in range(self.__number_of_learned_clauses):
+            # Learned clause is active
+            if (learned_clause_id in self.__active_learned_clause_hashset):
+                continue
+
+            if (self.__is_subset_learned_clause(learned_clause_id)):
+                learned_clauses_to_delete.append(learned_clause_id)
+
+        return learned_clauses_to_delete
+
+    def __is_subset_learned_clause(self, clause_id):
+        """
+        Return true if the learned clause with id (clause_id) is a subset of any saved learned clause, otherwise return false
+        """
+        
+        clause = self.__learned_clauses[clause_id]
+
+        for (learned_clause_id, learned_clause) in enumerate(self.__learned_clauses):
+            # Same clause
+            if (clause_id == learned_clause_id):
+                continue
+
+            if (all(x in learned_clause for x in clause)):
+                return True
+
+        return False
 
     def __is_keep_active_clauses_heuristic(self):
         """
@@ -948,6 +1190,42 @@ class CNF:
 
         if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.RemoveSubsumedClauses or
             self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses):
+            return True
+
+        return False
+
+    def __increment_number_of_deleted_learned_clauses(self, number = 1):
+        self.__number_of_deleted_learned_clauses += number
+
+    def __increment_number_of_clause_deletions(self, number = 1):
+        self.__number_of_clause_deletions += number
+
+    # Clause deletion (when)
+    def __get_clause_deletion_when_iterator(self):
+        # Restart
+        if (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.Restart):
+            return self.__max_value_iterator()
+
+        # Cache - geometric
+        if (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.CacheFull):
+            return self.__geometric_cache_clause_deletion_iterator()
+
+        raise MyException.UndefinedClauseDeletionWhenHeuristicCnfException(str(self.__clause_deletion_when_heuristic_enum))
+
+    def __geometric_cache_clause_deletion_iterator(self):
+        value = self.__first_term_geometric_cache_clause_deletion
+        yield value
+
+        while (True):
+            value = int(value * self.__common_ratio_geometric_cache_clause_deletion)
+            yield value
+
+    def __max_value_iterator(self):
+        while (True):
+            yield sys.maxsize**10
+
+    def __has_clause_deletion_when_heuristic(self):
+        if (self.__clause_deletion_when_heuristic_enum != ClauseDeletionWhenHeuristicEnum.none):
             return True
 
         return False
@@ -1121,6 +1399,9 @@ class CNF:
             self.__unit_learned_clause_list = []
             self.__contradiction_learned_clause_list = []
 
+        # Clause deletion
+        if (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.Restart):
+            self.__clause_deletion()
         return True
 
     # Decision variable
@@ -1291,3 +1572,19 @@ class CNF:
         """
 
         return self.number_of_restarts
+
+    @property
+    def number_of_deleted_learned_clauses(self):
+        """
+        number_of_deleted_learned_clauses getter
+        """
+
+        return self.__number_of_deleted_learned_clauses
+
+    @property
+    def number_of_clause_deletions(self):
+        """
+        number_of_clause_deletions getter
+        """
+
+        return self.__number_of_clause_deletions
