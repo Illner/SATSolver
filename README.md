@@ -13,7 +13,7 @@ dpllAlgorithm.py [-DIMACS | -SMT-LIB] input_path
 ## cdclAlgorithm.py ##
 CDCL solver
 
-cdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-WatchedLiterals | -AdjacencyList [-DIMACS | -SMT-LIB] input_path 
+cdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-WatchedLiterals | -AdjacencyList] [-DIMACS | -SMT-LIB] input_path 
 
 ### ClauseLearning ###
 1 - stop at the first UIP (**DEFAULT**)
