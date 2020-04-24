@@ -1,0 +1,119 @@
+RemoveSubsumedClauses
+Time:
+[0.0076764298137277365, 0.24652143474668264, 6.746925445273519, 77.23757495731115]
+Number of decisions:
+[11.9287109375, 146.87109375, 1232.9765625, 3079.890625]
+Number of steps of unit propagation:
+[66.88671875, 1763.1796875, 18630.0625, 54265.890625]
+Number of checked clauses:
+[417.974609375, 11423.109375, 234566.4140625, 1288244.5625]
+Number of deleted learned clauses:
+[0.0, 25.4296875, 228.640625, 354.765625]
+Number of clause deletions:
+[0.0, 0.60546875, 5.140625, 10.421875]
+Number of contradictions:
+[6.22265625, 105.05078125, 859.5625, 2032.59375]
+Number of contradictions caused by learned clauses:
+[0.0361328125, 4.05859375, 93.4140625, 260.15625]
+Number of unit propagations:
+[66.88671875, 1779.3125, 18824.828125, 54765.515625]
+Number of unit propagations caused by learned clauses:
+[7.55078125, 247.25390625, 4211.84375, 12948.609375]
+Number of restarts:
+[0.0, 0.60546875, 5.140625, 10.421875]
+
+KeepShortClauses
+Time:
+[0.007622610777616501, 0.24499165918678045, 3.685842825099826, 16.30123185738921]
+Number of decisions:
+[11.865234375, 154.8125, 1412.65625, 4314.078125]
+Number of steps of unit propagation:
+[64.96875, 1856.13671875, 21191.515625, 74527.21875]
+Number of checked clauses:
+[407.962890625, 11370.05078125, 141994.515625, 541176.0625]
+Number of deleted learned clauses:
+[0.0, 51.421875, 815.875, 2515.15625]
+Number of clause deletions:
+[0.0, 0.66796875, 5.65625, 13.09375]
+Number of contradictions:
+[6.099609375, 110.91796875, 971.8828125, 2791.84375]
+Number of contradictions caused by learned clauses:
+[0.0234375, 3.546875, 46.5625, 151.015625]
+Number of unit propagations:
+[64.96875, 1875.28125, 21407.265625, 75173.703125]
+Number of unit propagations caused by learned clauses:
+[7.3603515625, 243.0078125, 3130.9921875, 10253.046875]
+Number of restarts:
+[0.0, 0.66796875, 5.65625, 13.09375]
+
+KeepShortClausesAndRemoveSubsumedClauses
+Time:
+[0.007915663765743375, 0.23547478206455708, 4.462733503431082, 13.544974975287914]
+Number of decisions:
+[11.6875, 148.10546875, 1666.7578125, 3637.296875]
+Number of steps of unit propagation:
+[65.75390625, 1771.68359375, 24951.140625, 62558.078125]
+Number of checked clauses:
+[410.08984375, 10787.734375, 164892.171875, 420341.171875]
+Number of deleted learned clauses:
+[0.0, 51.67578125, 972.9375, 2199.5]
+Number of clause deletions:
+[0.0, 0.61328125, 6.6640625, 11.9375]
+Number of contradictions:
+[6.0869140625, 105.66015625, 1147.0390625, 2345.859375]
+Number of contradictions caused by learned clauses:
+[0.04296875, 3.28125, 56.1640625, 111.359375]
+Number of unit propagations:
+[65.75390625, 1789.1328125, 25207.0, 63148.4375]
+Number of unit propagations caused by learned clauses:
+[7.3603515625, 229.171875, 3727.09375, 8161.65625]
+Number of restarts:
+[0.0, 0.61328125, 6.6640625, 11.9375]
+
+KeepActiveClauses
+Time:
+[0.008238315815106034, 0.24411359056830406, 3.7118515502661467, 10.97401861101389]
+Number of decisions:
+[11.9072265625, 152.578125, 1318.5859375, 2786.546875]
+Number of steps of unit propagation:
+[67.08203125, 1812.9609375, 19983.0703125, 48947.46875]
+Number of checked clauses:
+[419.09375, 11476.21875, 152797.25, 392767.828125]
+Number of deleted learned clauses:
+[0.0, 34.453125, 662.625, 1538.953125]
+Number of clause deletions:
+[0.0, 0.6328125, 5.4765625, 9.453125]
+Number of contradictions:
+[6.27734375, 108.921875, 912.34375, 1816.953125]
+Number of contradictions caused by learned clauses:
+[0.0361328125, 4.04296875, 78.421875, 164.9375]
+Number of unit propagations:
+[67.08203125, 1830.0546875, 20192.015625, 49406.4375]
+Number of unit propagations caused by learned clauses:
+[7.6025390625, 253.734375, 4174.59375, 9629.78125]
+Number of restarts:
+[0.0, 0.6328125, 5.4765625, 9.453125]
+
+KeepActiveClausesAndRemoveSubsumedClauses
+Time:
+[0.007951709674671292, 0.2339552752673626, 3.8760640919208527, 13.826559953391552]
+Number of decisions:
+[11.884765625, 146.0625, 1328.65625, 3031.203125]
+Number of steps of unit propagation:
+[66.7568359375, 1757.984375, 20057.328125, 53265.765625]
+Number of checked clauses:
+[415.759765625, 10835.17578125, 147142.1640625, 439023.96875]
+Number of deleted learned clauses:
+[0.0, 47.26171875, 688.21875, 1732.359375]
+Number of clause deletions:
+[0.0, 0.6328125, 5.3359375, 10.03125]
+Number of contradictions:
+[6.234375, 104.61328125, 918.1171875, 1984.328125]
+Number of contradictions caused by learned clauses:
+[0.0302734375, 3.49609375, 75.40625, 182.453125]
+Number of unit propagations:
+[66.7568359375, 1775.42578125, 20262.2265625, 53756.40625]
+Number of unit propagations caused by learned clauses:
+[7.4443359375, 238.98046875, 4105.359375, 10748.6875]
+Number of restarts:
+[0.0, 0.6328125, 5.3359375, 10.03125]
