@@ -204,6 +204,6 @@ class InvalidArgumentsCDCLException(Exception):
 
     def __init__(self, message = ""):
         if (message == ""):
-            super().__init__("Invalid arguments\ncdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-DIMACS | -SMT-LIB] input_path")
+            super().__init__("cdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-WatchedLiterals | -AdjacencyList [-DIMACS | -SMT-LIB] input_path")
         else: 
             super().__init__(message)
