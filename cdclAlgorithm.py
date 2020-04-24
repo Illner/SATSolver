@@ -16,6 +16,7 @@ cnf = None
 input_path = None
 DIMACS_format = None
 
+unit_propagation = UnitPropagationEnum.WatchedLiterals
 clause_learning = ClauseLearningEnum.StopAtTheFirstUIP
 restart_strategy = RestartStrategyEnum.LubyStrategy
 clause_deletion_when_heuristic = ClauseDeletionWhenHeuristicEnum.Restart
@@ -40,14 +41,20 @@ def is_valid_parameter(x, lower_bound = 1, upper_bound = 2):
 
 try:
     # Read arguments
-    if ((len(sys.argv) == 1) or (len(sys.argv) > 8)):
+    if ((len(sys.argv) == 1) or (len(sys.argv) > 9)):
         raise MyException.InvalidArgumentsCDCLException("Invalid number of arguments")
 
     for i in range(1, len(sys.argv)):
+        # Type
         if (sys.argv[i] == "-DIMACS"):
             DIMACS_format = True
         elif (sys.argv[i] == "-SMT-LIB"):
             DIMACS_format = False
+        # Unit propagation
+        elif (sys.argv[i] == "-WatchedLiterals"):
+            unit_propagation = UnitPropagationEnum.WatchedLiterals
+        elif (sys.argv[i] == "-AdjacencyList"):
+            unit_propagation = UnitPropagationEnum.AdjacencyList
         # ClauseLearning
         elif (sys.argv[i].startswith("-ClauseLearning=")):
             number = is_valid_parameter(sys.argv[i][len("-ClauseLearning="):])
@@ -86,7 +93,7 @@ try:
                 decision_heuristic = DecisionHeuristicEnum.Random
         # ClauseDeletionHowHeuristic
         elif (sys.argv[i].startswith("-ClauseDeletionHowHeuristic=")):
-            number = is_valid_parameter(sys.argv[i][len("-ClauseDeletionHowHeuristic="):], upper_bound=4)
+            number = is_valid_parameter(sys.argv[i][len("-ClauseDeletionHowHeuristic="):], upper_bound=5)
             if (number is None):
                 raise MyException.InvalidArgumentsCDCLException("ClauseDeletionHowHeuristic")
             if (number == 1):
@@ -94,6 +101,8 @@ try:
             elif (number == 2):
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepShortClauses
             elif (number == 3):
+                clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepShortClausesAndRemoveSubsumedClauses
+            elif (number == 4):
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses
             else:
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses
@@ -124,7 +133,7 @@ try:
         derivationTree = DerivationTree(input_formula)
         tseitinEncoding = TseitinEncoding(derivationTree)
         cnf = CNF(str(tseitinEncoding), tseitinEncoding.original_variable_dictionary, 
-                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
+                  unit_propagation_enum=unit_propagation,
                   decision_heuristic_enum=decision_heuristic,
                   clause_learning_enum=clause_learning, 
                   clause_deletion_how_heuristic_enum=clause_deletion_how_heuristic, 
@@ -132,7 +141,7 @@ try:
                   restart_strategy_enum=restart_strategy)
     else:
         cnf = CNF(input_formula, 
-                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
+                  unit_propagation_enum=unit_propagation,
                   decision_heuristic_enum=decision_heuristic,
                   clause_learning_enum=clause_learning, 
                   clause_deletion_how_heuristic_enum=clause_deletion_how_heuristic,
@@ -148,6 +157,11 @@ try:
     print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
     print("Number of deleted learned clauses: " + str(cnf.number_of_deleted_learned_clauses))
     print("Number of clause deletions: " + str(cnf.number_of_clause_deletions))
+    print("Number of contradictions: " + str(cnf.number_of_contradictions))
+    print("Number of contradictions caused by learned clauses: " + str(cnf.number_of_contradictions_caused_by_learned_clauses))
+    print("Number of unit propagations: " + str(cnf.number_of_unit_propagations))
+    print("Number of unit propagations caused by learned clauses: " + str(cnf.number_of_unit_propagations_caused_by_learned_clauses))
+    print("Number of restarts: " + str(cnf.number_of_restarts))
 
     if (result is None):
         print("-----")

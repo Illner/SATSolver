@@ -92,7 +92,7 @@ class CNF:
         List<Tuple<int, int>> learned_clause_watched_literals_list
         Dictionary<int, Tuple<HashSet<int>, HashSet<int>>> variable_watched_literals_learned_clause_dictionary
         """
-        
+
         # CNF
         self.__cnf = []
         self.__number_of_clauses = 0
@@ -106,12 +106,17 @@ class CNF:
         self.__decision_heuristic_enum = decision_heuristic_enum
         self.__original_variable_dictionary = copy.deepcopy(original_variable_dictionary)
 
+        self.__number_of_contradictions = 0
+        self.__number_of_unit_propagations = 0
+
         # Learned clauses
         self.__use_learned_clauses = False if (clause_learning_enum == ClauseLearningEnum.none) else True
         self.__clause_learning_enum = clause_learning_enum
         self.__restart_strategy_enum = restart_strategy_enum
         self.__clause_deletion_how_heuristic_enum = clause_deletion_how_heuristic_enum
         self.__clause_deletion_when_heuristic_enum = clause_deletion_when_heuristic_enum
+        self.__number_of_contradictions_caused_by_learned_clauses = 0
+        self.__number_of_unit_propagations_caused_by_learned_clauses = 0
         if (self.__use_learned_clauses):
             self.__learned_clauses = []
             self.__number_of_learned_clauses = 0
@@ -157,7 +162,7 @@ class CNF:
                 self.__number_of_clause_deletions = 0
                 self.__number_of_deleted_learned_clauses = 0
             # Keep short clauses
-            if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepShortClauses):
+            if (self.__is_keep_short_clauses_heuristic()):
                 # bound_keep_short_clauses_heuristic is not a number
                 if (not isinstance(bound_keep_short_clauses_heuristic, int)):
                     raise MyException.InvalidParametersCnfException("bound_keep_short_clauses_heuristic ({0}) is not a number".format(bound_keep_short_clauses_heuristic))
@@ -428,6 +433,7 @@ class CNF:
 
         # Learned clauses are not supported - Contradiction
         if (not self.__use_learned_clauses):
+            self.__number_of_contradictions += 1
             return True
 
         # Learned clauses are supported - No contradiction
@@ -435,14 +441,17 @@ class CNF:
             return None
 
         # Learned clauses are supported - Contradiction
+        (clause_id, is_original_clause) = temp_contradiction
+
+        self.__number_of_contradictions += 1
+        if (not is_original_clause):
+            self.__number_of_contradictions_caused_by_learned_clauses += 1
         
         # Restart
         if (self.__has_restart()):
             self.__increment_number_of_conflicts()
             if (self.__restart()):
                 return 0 # New decision level
-
-        (clause_id, is_original_clause) = temp_contradiction
 
         # Update active_counter_learned_clause_dictionary
         if (self.__is_keep_active_clauses_heuristic() and not is_original_clause):
@@ -494,6 +503,7 @@ class CNF:
                 if (self.__use_learned_clauses):
                     self.__update_learned_clauses_unit_propagation(l, clause_id, True)
 
+                self.__number_of_unit_propagations += 1
                 self.add_literal_to_partial_assignment(l)
 
                 if (len(self.__contradiction_clause_list) != 0):
@@ -508,7 +518,9 @@ class CNF:
                 l = undefined_literal_list.pop()
 
                 self.__update_learned_clauses_unit_propagation(l, learned_clause_id, False)
-
+                
+                self.__number_of_unit_propagations += 1
+                self.__number_of_unit_propagations_caused_by_learned_clauses += 1
                 self.add_literal_to_partial_assignment(l)
 
                 # Learned clauses - contradiction
@@ -581,7 +593,10 @@ class CNF:
 
                     if (self.__use_learned_clauses):
                         self.__update_learned_clauses_unit_propagation(x, clause_id, is_original_clause)
+                        if (not is_original_clause):
+                            self.__number_of_unit_propagations_caused_by_learned_clauses += 1
 
+                    self.__number_of_unit_propagations += 1
                     self.add_literal_to_partial_assignment(x)
                 # Contradiction
                 else:
@@ -1076,9 +1091,17 @@ class CNF:
 
         # Keep active clauses and remove subsumed clauses
         if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses):
+            learned_clauses_to_delete = self.__remove_subsumed_clauses_heuristic()
+            self.__remove_learned_clauses(learned_clauses_to_delete)
             learned_clauses_to_delete = self.__keep_active_clauses_heuristic()
             self.__remove_learned_clauses(learned_clauses_to_delete)
+            return
+
+        # Keep short clauses and remove subsumed clauses
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepShortClausesAndRemoveSubsumedClauses):
             learned_clauses_to_delete = self.__remove_subsumed_clauses_heuristic()
+            self.__remove_learned_clauses(learned_clauses_to_delete)
+            learned_clauses_to_delete = self.__keep_short_clauses_heuristic()
             self.__remove_learned_clauses(learned_clauses_to_delete)
             return
 
@@ -1143,21 +1166,16 @@ class CNF:
         Return a list of learned clauses which should be deleted
         """
 
-        learned_clauses_to_delete = []
+        learned_clauses_to_delete_hashset = set()
 
         for learned_clause_id in range(self.__number_of_learned_clauses):
-            # Learned clause is active
-            if (learned_clause_id in self.__active_learned_clause_hashset):
-                continue
+            learned_clauses_to_delete_hashset = self.__supperset_learned_clause(learned_clause_id, learned_clauses_to_delete_hashset)
 
-            if (self.__is_subset_learned_clause(learned_clause_id)):
-                learned_clauses_to_delete.append(learned_clause_id)
-
-        return learned_clauses_to_delete
+        return list(learned_clauses_to_delete_hashset)
 
     def __is_subset_learned_clause(self, clause_id):
         """
-        Return true if the learned clause with id (clause_id) is a subset of any saved learned clause, otherwise return false
+        Return true if the learned clause with the id (clause_id) is a subset of any saved learned clause, otherwise return false
         """
         
         clause = self.__learned_clauses[clause_id]
@@ -1171,6 +1189,26 @@ class CNF:
                 return True
 
         return False
+
+    def __supperset_learned_clause(self, clause_id, superset_hashset = {}):
+        """
+        Return a hashset contains all learned clauses which are supersets of the learned clause with the id (clause_id)
+        """
+
+        clause = self.__learned_clauses[clause_id]
+
+        for (learned_clause_id, learned_clause) in enumerate(self.__learned_clauses):
+            # Same clause
+            if (learned_clause_id == clause_id):
+                continue
+
+            if (all(x in learned_clause for x in clause)):
+                if (learned_clause_id in self.__active_learned_clause_hashset):
+                    continue
+                else:
+                    superset_hashset.add(learned_clause_id)
+
+        return superset_hashset
 
     def __is_keep_active_clauses_heuristic(self):
         """
@@ -1190,6 +1228,17 @@ class CNF:
 
         if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.RemoveSubsumedClauses or
             self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses):
+            return True
+
+        return False
+
+    def __is_keep_short_clauses_heuristic(self):
+        """
+        Return true if the clause deletion heuristic is keep short clauses, otherwise false
+        """
+
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepShortClauses or 
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepShortClausesAndRemoveSubsumedClauses):
             return True
 
         return False
@@ -1588,3 +1637,59 @@ class CNF:
         """
 
         return self.__number_of_clause_deletions
+
+    @property
+    def number_of_deleted_learned_clauses(self):
+        """
+        number_of_deleted_learned_clauses getter
+        """
+
+        return self.__number_of_deleted_learned_clauses
+
+    @property
+    def number_of_restarts(self):
+        """
+        number_of_restarts getter
+        """
+
+        return self.__number_of_restarts
+
+    @property
+    def number_of_contradictions(self):
+        """
+        number_of_contradictions getter
+        """
+
+        return self.__number_of_contradictions
+
+    @property
+    def number_of_unit_propagations(self):
+        """
+        number_of_unit_propagations getter
+        """
+
+        return self.__number_of_unit_propagations
+
+    @property
+    def number_of_contradictions_caused_by_learned_clauses(self):
+        """
+        number_of_contradictions_caused_by_learned_clauses getter
+        """
+
+        return self.__number_of_contradictions_caused_by_learned_clauses
+
+    @property
+    def number_of_unit_propagations_caused_by_learned_clauses(self):
+        """
+        number_of_unit_propagations_caused_by_learned_clauses getter
+        """
+
+        return self.__number_of_unit_propagations_caused_by_learned_clauses
+
+    @property
+    def active_learned_clause_hashset(self):
+        """
+        active_learned_clause_hashset getter
+        """
+
+        return self.__active_learned_clause_hashset

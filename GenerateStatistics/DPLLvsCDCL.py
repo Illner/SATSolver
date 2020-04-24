@@ -74,7 +74,7 @@ for i in range(len(dictionary_list)):
         # CDCL
         cnf = CNF(input_formula, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
-                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
                   clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClauses,
                   clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.Restart,

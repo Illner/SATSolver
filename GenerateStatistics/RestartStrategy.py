@@ -19,9 +19,9 @@ from ClauseDeletionHeuristicEnum import ClauseDeletionHowHeuristicEnum
 from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 
 path = os.path.join(os.path.dirname(__file__), '../CNF')
-dictionary_list = ["20-91", "50-218", "75-325", "100-430", "125-538"]
-x_axis_variables = [20, 50, 75, 100, 125]
-count_list = [1024, 128, 16, 8, 4]
+dictionary_list = ["20-91", "50-218", "75-325", "100-430"]
+x_axis_variables = [20, 50, 75, 100]
+count_list = [1024, 256, 128, 64]
 
 log_LubyStrategy_list = []
 log_GeometricStrategy_list = []
@@ -53,7 +53,7 @@ for i in range(len(dictionary_list)):
         # LubyStrategy
         cnf = CNF(input_formula, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
-                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
                   clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClauses,
                   clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.Restart,
@@ -73,20 +73,30 @@ for i in range(len(dictionary_list)):
         print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
         print("Number of deleted learned clauses: " + str(cnf.number_of_deleted_learned_clauses))
         print("Number of clause deletions: " + str(cnf.number_of_clause_deletions))
+        print("Number of contradictions: " + str(cnf.number_of_contradictions))
+        print("Number of contradictions caused by learned clauses: " + str(cnf.number_of_contradictions_caused_by_learned_clauses))
+        print("Number of unit propagations: " + str(cnf.number_of_unit_propagations))
+        print("Number of unit propagations caused by learned clauses: " + str(cnf.number_of_unit_propagations_caused_by_learned_clauses))
+        print("Number of restarts: " + str(cnf.number_of_restarts))
 
         log_LubyStrategy_list[i].append((cdcl.time,
                                          cdcl.number_of_decisions, 
                                          cdcl.number_of_steps_of_unit_propagation,
                                          cnf.number_of_checked_clauses,
                                          cnf.number_of_deleted_learned_clauses,
-                                         cnf.number_of_clause_deletions))
+                                         cnf.number_of_clause_deletions,
+                                         cnf.number_of_contradictions,
+                                         cnf.number_of_contradictions_caused_by_learned_clauses,
+                                         cnf.number_of_unit_propagations,
+                                         cnf.number_of_unit_propagations_caused_by_learned_clauses,
+                                         cnf.number_of_restarts))
 
         print()
 
         # GeometricStrategy
         cnf = CNF(input_formula, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
-                  decision_heuristic_enum=DecisionHeuristicEnum.Greedy,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
                   clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
                   clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClauses,
                   clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.Restart,
@@ -106,13 +116,23 @@ for i in range(len(dictionary_list)):
         print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
         print("Number of deleted learned clauses: " + str(cnf.number_of_deleted_learned_clauses))
         print("Number of clause deletions: " + str(cnf.number_of_clause_deletions))
+        print("Number of contradictions: " + str(cnf.number_of_contradictions))
+        print("Number of contradictions caused by learned clauses: " + str(cnf.number_of_contradictions_caused_by_learned_clauses))
+        print("Number of unit propagations: " + str(cnf.number_of_unit_propagations))
+        print("Number of unit propagations caused by learned clauses: " + str(cnf.number_of_unit_propagations_caused_by_learned_clauses))
+        print("Number of restarts: " + str(cnf.number_of_restarts))
 
         log_GeometricStrategy_list[i].append((cdcl.time, 
                                               cdcl.number_of_decisions, 
                                               cdcl.number_of_steps_of_unit_propagation, 
                                               cnf.number_of_checked_clauses,
                                               cnf.number_of_deleted_learned_clauses,
-                                              cnf.number_of_clause_deletions))
+                                              cnf.number_of_clause_deletions,
+                                              cnf.number_of_contradictions,
+                                              cnf.number_of_contradictions_caused_by_learned_clauses,
+                                              cnf.number_of_unit_propagations,
+                                              cnf.number_of_unit_propagations_caused_by_learned_clauses,
+                                              cnf.number_of_restarts))
 
 # Log LubyStrategy
 time_y_LubyStrategy = []
@@ -121,6 +141,11 @@ number_of_steps_of_unit_propagation_y_LubyStrategy = []
 number_of_checked_clauses_y_LubyStrategy = []
 number_of_deleted_learned_clauses_y_LubyStrategy = []
 number_of_clause_deletions_y_LubyStrategy = []
+number_of_contradiction_y_LubyStrategy = []
+number_of_contradictions_caused_by_learned_clauses_y_LubyStrategy = []
+number_of_unit_propagations_y_LubyStrategy = []
+number_of_unit_propagations_caused_by_learned_clauses_y_LubyStrategy = []
+number_of_restarts_y_LubyStrategy = []
 
 for i in range(len(log_LubyStrategy_list)):
     time_average = 0
@@ -129,6 +154,11 @@ for i in range(len(log_LubyStrategy_list)):
     number_of_checked_clauses_average = 0
     number_of_deleted_learned_clauses_average = 0
     number_of_clause_deletions_average = 0
+    number_of_contradiction_average = 0
+    number_of_contradictions_caused_by_learned_clauses_average = 0
+    number_of_unit_propagations_average = 0
+    number_of_unit_propagations_caused_by_learned_clauses_average = 0
+    number_of_restarts_average = 0
 
     for j in range(len(log_LubyStrategy_list[i])):
         time_average += log_LubyStrategy_list[i][j][0]
@@ -137,6 +167,11 @@ for i in range(len(log_LubyStrategy_list)):
         number_of_checked_clauses_average += log_LubyStrategy_list[i][j][3]
         number_of_deleted_learned_clauses_average += log_LubyStrategy_list[i][j][4]
         number_of_clause_deletions_average += log_LubyStrategy_list[i][j][5]
+        number_of_contradiction_average += log_LubyStrategy_list[i][j][6]
+        number_of_contradictions_caused_by_learned_clauses_average += log_LubyStrategy_list[i][j][7]
+        number_of_unit_propagations_average += log_LubyStrategy_list[i][j][8]
+        number_of_unit_propagations_caused_by_learned_clauses_average += log_LubyStrategy_list[i][j][9]
+        number_of_restarts_average += log_LubyStrategy_list[i][j][10]
     size = len(log_LubyStrategy_list[i])
     if (size != 0):
         time_average /= size
@@ -145,6 +180,11 @@ for i in range(len(log_LubyStrategy_list)):
         number_of_checked_clauses_average /= size
         number_of_deleted_learned_clauses_average /= size
         number_of_clause_deletions_average /= size
+        number_of_contradiction_average /= size
+        number_of_contradictions_caused_by_learned_clauses_average /= size
+        number_of_unit_propagations_average /= size
+        number_of_unit_propagations_caused_by_learned_clauses_average /= size
+        number_of_restarts_average /= size
 
     time_y_LubyStrategy.append(time_average)
     number_of_decisions_y_LubyStrategy.append(number_of_decisions_average)
@@ -152,6 +192,11 @@ for i in range(len(log_LubyStrategy_list)):
     number_of_checked_clauses_y_LubyStrategy.append(number_of_checked_clauses_average)
     number_of_deleted_learned_clauses_y_LubyStrategy.append(number_of_deleted_learned_clauses_average)
     number_of_clause_deletions_y_LubyStrategy.append(number_of_clause_deletions_average)
+    number_of_contradiction_y_LubyStrategy.append(number_of_contradiction_average)
+    number_of_contradictions_caused_by_learned_clauses_y_LubyStrategy.append(number_of_contradictions_caused_by_learned_clauses_average)
+    number_of_unit_propagations_y_LubyStrategy.append(number_of_unit_propagations_average)
+    number_of_unit_propagations_caused_by_learned_clauses_y_LubyStrategy.append(number_of_unit_propagations_caused_by_learned_clauses_average)
+    number_of_restarts_y_LubyStrategy.append(number_of_restarts_average)
 
 # Log GeometricStrategy
 time_y_GeometricStrategy = []
@@ -160,6 +205,11 @@ number_of_steps_of_unit_propagation_y_GeometricStrategy = []
 number_of_checked_clauses_y_GeometricStrategy = []
 number_of_deleted_learned_clauses_y_GeometricStrategy = []
 number_of_clause_deletions_y_GeometricStrategy = []
+number_of_contradiction_y_GeometricStrategy = []
+number_of_contradictions_caused_by_learned_clauses_y_GeometricStrategy = []
+number_of_unit_propagations_y_GeometricStrategy = []
+number_of_unit_propagations_caused_by_learned_clauses_y_GeometricStrategy = []
+number_of_restarts_y_GeometricStrategy = []
 
 for i in range(len(log_GeometricStrategy_list)):
     time_average = 0
@@ -168,6 +218,11 @@ for i in range(len(log_GeometricStrategy_list)):
     number_of_checked_clauses_average = 0
     number_of_deleted_learned_clauses_average = 0
     number_of_clause_deletions_average = 0
+    number_of_contradiction_average = 0
+    number_of_contradictions_caused_by_learned_clauses_average = 0
+    number_of_unit_propagations_average = 0
+    number_of_unit_propagations_caused_by_learned_clauses_average = 0
+    number_of_restarts_average = 0
 
     for j in range(len(log_GeometricStrategy_list[i])):
         time_average += log_GeometricStrategy_list[i][j][0]
@@ -176,6 +231,11 @@ for i in range(len(log_GeometricStrategy_list)):
         number_of_checked_clauses_average += log_GeometricStrategy_list[i][j][3]
         number_of_deleted_learned_clauses_average += log_GeometricStrategy_list[i][j][4]
         number_of_clause_deletions_average += log_GeometricStrategy_list[i][j][5]
+        number_of_contradiction_average += log_GeometricStrategy_list[i][j][6]
+        number_of_contradictions_caused_by_learned_clauses_average += log_GeometricStrategy_list[i][j][7]
+        number_of_unit_propagations_average += log_GeometricStrategy_list[i][j][8]
+        number_of_unit_propagations_caused_by_learned_clauses_average += log_GeometricStrategy_list[i][j][9]
+        number_of_restarts_average += log_GeometricStrategy_list[i][j][10]
     size = len(log_GeometricStrategy_list[i])
     if (size != 0):
         time_average /= size
@@ -184,6 +244,11 @@ for i in range(len(log_GeometricStrategy_list)):
         number_of_checked_clauses_average /= size
         number_of_deleted_learned_clauses_average /= size
         number_of_clause_deletions_average /= size
+        number_of_contradiction_average /= size
+        number_of_contradictions_caused_by_learned_clauses_average /= size
+        number_of_unit_propagations_average /= size
+        number_of_unit_propagations_caused_by_learned_clauses_average /= size
+        number_of_restarts_average /= size
 
     time_y_GeometricStrategy.append(time_average)
     number_of_decisions_y_GeometricStrategy.append(number_of_decisions_average)
@@ -191,6 +256,11 @@ for i in range(len(log_GeometricStrategy_list)):
     number_of_checked_clauses_y_GeometricStrategy.append(number_of_checked_clauses_average)
     number_of_deleted_learned_clauses_y_GeometricStrategy.append(number_of_deleted_learned_clauses_average)
     number_of_clause_deletions_y_GeometricStrategy.append(number_of_clause_deletions_average)
+    number_of_contradiction_y_GeometricStrategy.append(number_of_contradiction_average)
+    number_of_contradictions_caused_by_learned_clauses_y_GeometricStrategy.append(number_of_contradictions_caused_by_learned_clauses_average)
+    number_of_unit_propagations_y_GeometricStrategy.append(number_of_unit_propagations_average)
+    number_of_unit_propagations_caused_by_learned_clauses_y_GeometricStrategy.append(number_of_unit_propagations_caused_by_learned_clauses_average)
+    number_of_restarts_y_GeometricStrategy.append(number_of_restarts_average)
 
 print("LubyStrategy")
 print("Time: ")
@@ -205,6 +275,16 @@ print("Number of deleted learned clauses: ")
 print(number_of_deleted_learned_clauses_y_LubyStrategy)
 print("Number of clause deletions: ")
 print(number_of_clause_deletions_y_LubyStrategy)
+print("Number of contradictions: ")
+print(number_of_contradiction_y_LubyStrategy)
+print("Number of contradictions caused by learned clauses: ")
+print(number_of_contradictions_caused_by_learned_clauses_y_LubyStrategy)
+print("Number of unit propagations: ")
+print(number_of_unit_propagations_y_LubyStrategy)
+print("Number of unit propagations caused by learned clauses: ")
+print(number_of_unit_propagations_caused_by_learned_clauses_y_LubyStrategy)
+print("Number of restarts: ")
+print(number_of_restarts_y_LubyStrategy)
 
 print()
 
@@ -221,6 +301,16 @@ print("Number of deleted learned clauses: ")
 print(number_of_deleted_learned_clauses_y_GeometricStrategy)
 print("Number of clause deletions: ")
 print(number_of_clause_deletions_y_GeometricStrategy)
+print("Number of contradictions: ")
+print(number_of_contradiction_y_GeometricStrategy)
+print("Number of contradictions caused by learned clauses: ")
+print(number_of_contradictions_caused_by_learned_clauses_y_GeometricStrategy)
+print("Number of unit propagations: ")
+print(number_of_unit_propagations_y_GeometricStrategy)
+print("Number of unit propagations caused by learned clauses: ")
+print(number_of_unit_propagations_caused_by_learned_clauses_y_GeometricStrategy)
+print("Number of restarts: ")
+print(number_of_restarts_y_GeometricStrategy)
 
 # Time
 plt.plot(x_axis_variables, time_y_LubyStrategy, color="blue", label='LubyStrategy')

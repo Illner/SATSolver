@@ -41,9 +41,12 @@ A heuristic for regularly deleting some of the learned clauses:
 
 2 - keep short clauses
 
-3 - keep active clauses (**DEFAULT**)
+3 - keep short clauses and remove subsumed clauses
 
-4 - keep active clauses and remove subsumed clauses
+4 - keep active clauses (**DEFAULT**)
+
+5 - keep active clauses and remove subsumed clauses
+
 
 ### DecisionHeuristic ###
 1 - first literal, which is found, is used (**DEFAULT**)
