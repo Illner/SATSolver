@@ -13,7 +13,7 @@ dpllAlgorithm.py [-DIMACS | -SMT-LIB] input_path
 ## cdclAlgorithm.py ##
 CDCL solver
 
-cdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-WatchedLiterals | -AdjacencyList] [-DIMACS | -SMT-LIB] input_path 
+cdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-WatchedLiterals | -AdjacencyList] [-DIMACS | -SMT-LIB] [-Assumptions=[literal_1, literal_2, ...]] input_path 
 
 ### ClauseLearning ###
 1 - stop at the first UIP (**DEFAULT**)
@@ -49,6 +49,18 @@ A heuristic for regularly deleting some of the learned clauses:
 
 
 ### DecisionHeuristic ###
-1 - first literal, which is found, is used (**DEFAULT**)
+1 - first literal, which is found, is used
 
 2 - literal is picked randomly (all pickable literals have same weights)
+
+3 - Jeroslow-Wang one-sided
+
+4 - Jeroslow-Wang one-sided dynamic
+
+5 - Jeroslow-Wang two-sided
+
+6 - Jeroslow-Wang two-sided dynamic
+
+7 - VSIDS
+
+8 - eVSIDS (**DEFAULT**)

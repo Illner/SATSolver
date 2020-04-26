@@ -206,4 +206,23 @@ class InvalidArgumentsCDCLException(Exception):
         if (message == ""):
             super().__init__("cdclAlgorithm.py [-ClauseLearning=X] [-RestartStrategy=X] [-ClauseDeletionWhenHeuristic=X] [-ClauseDeletionHowHeuristic=X] [-DecisionHeuristic=X] [-WatchedLiterals | -AdjacencyList [-DIMACS | -SMT-LIB] input_path")
         else: 
-            super().__init__(message)
+            super().__init__("Invalid argument " + message)
+
+class UndefinedDecisionHeuristicCnfException(Exception):
+    """
+    Undefined decision heuristic
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Undefined decision heuristic")
+        else:
+            super().__init__("Undefined decision heuristic: " + message)
+
+class VariableDoesNotExistCnfException(Exception):
+    """
+    Variable does not exist
+    """
+
+    def __init__(self, message):
+        super().__init__("Variable does not exist: " + message)

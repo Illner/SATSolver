@@ -5,12 +5,13 @@ import MyException
 
 class CDCL:
     # Constructor
-    def __init__(self, cnf):
+    def __init__(self, cnf, assumptions = []):
         """
         int time
         List<List<int>> cnf
         List<int> model2
         Dictionary<string, boolean> model
+        List<int> assumptions
         int number_of_decisions
         int number_of_steps_of_unit_propagation
         """
@@ -19,6 +20,7 @@ class CDCL:
         self.__cnf = cnf
         self.__model2 = []
         self.__model = {}
+        self.__assumptions = assumptions
         self.__number_of_decisions = 0
         self.__number_of_steps_of_unit_propagation = 0
 
@@ -60,6 +62,25 @@ class CDCL:
         return self.__model2
 
     def __CDCL(self):
+        # Assumptions
+        if (self.__assumptions):
+            self.__cnf.current_decision_level = -1
+
+            for assumption in self.__assumptions:
+                # Contradiction in assumptions
+                if (-assumption in self.__cnf.partial_assignment):
+                    return None
+
+                # Duplication
+                if (assumption in self.__cnf.partial_assignment):
+                    continue
+
+                # Literal is valid
+                if (assumption in self.__cnf.literal_list):
+                    self.__cnf.add_literal_to_partial_assignment(assumption)
+
+            self.__cnf.current_decision_level = 0
+
         # Main loop
         while(True):
             number_of_assigned_literals_before_unit_propagation = len(self.__cnf.partial_assignment)
@@ -118,3 +139,11 @@ class CDCL:
         """
 
         return self.__time
+
+    @property
+    def assumptions(self):
+        """
+        assumptions getter
+        """
+
+        return self.__assumptions

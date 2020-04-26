@@ -13,6 +13,7 @@ from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 
 # Variable
 cnf = None
+assumptions = []
 input_path = None
 DIMACS_format = None
 
@@ -21,7 +22,7 @@ clause_learning = ClauseLearningEnum.StopAtTheFirstUIP
 restart_strategy = RestartStrategyEnum.LubyStrategy
 clause_deletion_when_heuristic = ClauseDeletionWhenHeuristicEnum.Restart
 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses
-decision_heuristic = DecisionHeuristicEnum.Greedy
+decision_heuristic = DecisionHeuristicEnum.eVSIDS
 
 def is_valid_parameter(x, lower_bound = 1, upper_bound = 2):
     """
@@ -39,9 +40,38 @@ def is_valid_parameter(x, lower_bound = 1, upper_bound = 2):
 
     return number
 
+def parse_assumptions(text):
+    """
+    Return a list of literals
+    If text is invalid return None
+    """
+
+    if (not text.startswith("[") and not text.endswith("]")):
+        return None
+
+    # Remove brackets
+    text = text[1:-1]
+    
+    text = text.replace(" ", "")
+
+    # No assumption
+    if (not len(text)):
+        return []
+
+    text = text.split(",")
+    temp_list = []
+
+    for literal in text:
+        try:
+            temp_list.append(int(literal))
+        except ValueError:
+            return None
+        
+    return temp_list
+
 try:
     # Read arguments
-    if ((len(sys.argv) == 1) or (len(sys.argv) > 9)):
+    if ((len(sys.argv) == 1) or (len(sys.argv) > 10)):
         raise MyException.InvalidArgumentsCDCLException("Invalid number of arguments")
 
     for i in range(1, len(sys.argv)):
@@ -84,13 +114,25 @@ try:
                 clause_deletion_when_heuristic = ClauseDeletionWhenHeuristicEnum.CacheFull
         # DecisionHeuristic
         elif (sys.argv[i].startswith("-DecisionHeuristic=")):
-            number = is_valid_parameter(sys.argv[i][len("-DecisionHeuristic="):])
+            number = is_valid_parameter(sys.argv[i][len("-DecisionHeuristic="):], upper_bound=8)
             if (number is None):
                 raise MyException.InvalidArgumentsCDCLException("DecisionHeuristic")
             if (number == 1):
                 decision_heuristic = DecisionHeuristicEnum.Greedy
-            else:
+            elif (number == 2):
                 decision_heuristic = DecisionHeuristicEnum.Random
+            elif (number == 3):
+                decision_heuristic = DecisionHeuristicEnum.JeroslowWangOneSided
+            elif (number == 4):
+                decision_heuristic = DecisionHeuristicEnum.JeroslowWangOneSidedDynamic
+            elif (number == 5):
+                decision_heuristic = DecisionHeuristicEnum.JeroslowWangTwoSided
+            elif (number == 6):
+                decision_heuristic = DecisionHeuristicEnum.JeroslowWangTwoSidedDynamic
+            elif (number == 7):
+                decision_heuristic = DecisionHeuristicEnum.VSIDS
+            else:
+                decision_heuristic = DecisionHeuristicEnum.eVSIDS
         # ClauseDeletionHowHeuristic
         elif (sys.argv[i].startswith("-ClauseDeletionHowHeuristic=")):
             number = is_valid_parameter(sys.argv[i][len("-ClauseDeletionHowHeuristic="):], upper_bound=5)
@@ -106,6 +148,13 @@ try:
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses
             else:
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses
+        # Assumptions
+        elif (sys.argv[i].startswith("-Assumptions=")):
+            temp = parse_assumptions(sys.argv[i][len("-Assumptions="):])
+            if (temp is None):
+                raise MyException.InvalidArgumentsCDCLException("Invalid assumptions!")
+
+            assumptions = temp
         else:
             if (input_path is not None):
                 raise MyException.InvalidArgumentsCDCLException()
@@ -148,7 +197,7 @@ try:
                   clause_deletion_when_heuristic_enum=clause_deletion_when_heuristic,
                   restart_strategy_enum=restart_strategy)
         
-    cdcl = CDCL(cnf)
+    cdcl = CDCL(cnf, assumptions=assumptions)
     result = cdcl.CDCL()
 
     print("Total CPU time: " + str(cdcl.time) + "s")
@@ -185,6 +234,3 @@ except (MyException.InvalidArgumentsCDCLException,
     print(e)
 except FileNotFoundError:
     print("Input file does not exist")
-except Exception as e:
-    print("Something wrong")
-    print(e)

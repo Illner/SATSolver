@@ -60,6 +60,9 @@
     <Compile Include="GenerateStatistics\ClauseDeletionWhenHeuristic.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GenerateStatistics\DecisionHeuristic.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GenerateStatistics\DPLLvsCDCL.py">
       <SubType>Code</SubType>
     </Compile>

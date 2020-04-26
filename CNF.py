@@ -1,5 +1,6 @@
 import sys
 import copy
+import heapq
 import random
 import operator
 import MyException
@@ -21,6 +22,8 @@ class CNF:
                  unit_propagation_enum = UnitPropagationEnum.AdjacencyList,
                  clause_learning_enum = ClauseLearningEnum.none,
                  decision_heuristic_enum = DecisionHeuristicEnum.Greedy,
+                 decay_constant_VSIDS_decision_heuristic = 2, # Decision heuristic - VSIDS
+                 decay_period_VSIDS_decision_heuristic = 255, # Decision heuristic - VSIDS
                  clause_deletion_how_heuristic_enum = ClauseDeletionHowHeuristicEnum.none,
                  bound_keep_short_clauses_heuristic = 2, # Clause deletion - keep short clauses heuristic
                  ratio_keep_active_clauses_heuristic = 0.5, # Clause deletion - keep active clauses heuristic
@@ -91,6 +94,16 @@ class CNF:
 
         List<Tuple<int, int>> learned_clause_watched_literals_list
         Dictionary<int, Tuple<HashSet<int>, HashSet<int>>> variable_watched_literals_learned_clause_dictionary
+
+        Dictionary<int, int> score_Jeroslow_Wang_dictionary
+        Heap<Tuple<int, int>> score_Jeroslow_Wang_heap
+
+        int number_of_decay
+        int number_of_conflicts_VSIDS_decision_heuristic
+        int decay_constant_VSIDS_decision_heuristic
+        int decay_period_VSIDS_decision_heuristic
+        Dictionary<int, int> score_VSIDS_dictionary
+        Heap<Tuple<int, int>> score_VSIDS_heap
         """
 
         # CNF
@@ -241,6 +254,32 @@ class CNF:
         self.__literal_list = list(range(-self.__number_of_variables, self.__number_of_variables + 1))
         self.__literal_list.remove(0)
         self.__undefined_literals_hashset = set(self.__literal_list)
+
+        # Decision heuristic
+        # Jeroslow-Wang
+        if (self.__is_Jeroslow_Wang_decision_variable_heuristic()):
+            self.__score_Jeroslow_Wang_dictionary = {}
+            self.__score_Jeroslow_Wang_heap = None
+            self.__initialize_Jeroslow_Wang_decision_variable_heuristic()
+        # VSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
+            self.__number_of_decay = 0
+            self.__number_of_conflicts_VSIDS_decision_heuristic = 0
+            self.__decay_constant_VSIDS_decision_heuristic = decay_constant_VSIDS_decision_heuristic
+            self.__decay_period_VSIDS_decision_heuristic = decay_period_VSIDS_decision_heuristic
+            self.__score_VSIDS_dictionary = {}
+            self.__score_VSIDS_heap = None
+            self.__initialize_VSIDS_decision_variable_heuristic()
+        # eVSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.eVSIDS):
+            self.__decision_heuristic_enum = DecisionHeuristicEnum.VSIDS
+            self.__number_of_decay = 0
+            self.__number_of_conflicts_VSIDS_decision_heuristic = 0
+            self.__decay_constant_VSIDS_decision_heuristic = 10/9
+            self.__decay_period_VSIDS_decision_heuristic = 1
+            self.__score_VSIDS_dictionary = {}
+            self.__score_VSIDS_heap = None
+            self.__initialize_VSIDS_decision_variable_heuristic()
 
         # Initialize adjacency_list_learned_clause_dictionary
         if (self.__use_learned_clauses and self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
@@ -426,6 +465,11 @@ class CNF:
             temp_contradiction = self.__unit_propagation_watched_literals()
         else:
             raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
+
+        # VSIDS - Contradiction
+        if (temp_contradiction is not None and self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
+            self.__number_of_conflicts_VSIDS_decision_heuristic += 1
+            self.__decay_VSIDS_decision_heuristic()
 
         # Learned cluases are not supported - No contradiction
         if (not self.__use_learned_clauses and temp_contradiction is None):
@@ -616,6 +660,24 @@ class CNF:
         if (check_partial_assignment and not(self.__check_partial_assignment())):
             raise MyException.InvalidLiteralInPartialAssignmentCnfException(str(self.__partial_assignment_list))
 
+        # Jeroslow-Wang
+        if (self.__is_Jeroslow_Wang_decision_variable_heuristic() and 
+            self.__score_Jeroslow_Wang_heap is not None and len(self.__score_Jeroslow_Wang_heap)):
+            # Literal is the minimum in the heap
+            if (literal == self.__score_Jeroslow_Wang_heap[0][1]):
+                heapq.heappop(self.__score_Jeroslow_Wang_heap)
+            else:
+                self.__score_Jeroslow_Wang_heap = None
+
+        # VSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS and
+            self.__score_VSIDS_heap is not None and len(self.__score_VSIDS_heap)):
+            # Literal is the minimum in the heap
+            if (literal == self.__score_VSIDS_heap[0][1]):
+                heapq.heappop(self.__score_VSIDS_heap)
+            else:
+                self.__score_VSIDS_heap = None
+
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
             self.__update_counter(literal)
         elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
@@ -628,6 +690,14 @@ class CNF:
         if (literal not in self.__partial_assignment_only_literals_hashset):
             raise MyException.InvalidLiteralInPartialAssignmentCnfException("Literal '{0}' is not in the partial assignment: '{1}'".format(literal, self.__partial_assignment_list))
         
+        # Jeroslow-Wang
+        if (self.__is_Jeroslow_Wang_decision_variable_heuristic()):
+            self.__add_variable_to_score_Jeroslow_Wang_heap(abs(literal))
+
+        # VSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
+            self.__add_variable_to_score_VSIDS_heap(abs(literal))
+
         level = self.level_in_partial_assignment_for_literal(literal)
 
         self.__variable_level_dictionary.pop(abs(literal))
@@ -643,7 +713,7 @@ class CNF:
             self.__antecedent_dictionary[abs(literal)] = None
             if (not is_original_clause):
                 self.__active_learned_clause_hashset.remove(clause_id)
-
+        
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
             self.__update_counter(literal)
         elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
@@ -835,6 +905,17 @@ class CNF:
         # Learned clause is empty
         if (not learned_clause):
             return
+
+        # Jeroslow-Wang
+        if (self.__is_dynamic_Jeroslow_Wang_decision_variable_heuristic()):
+            learned_clause_size = len(learned_clause)
+            for literal in learned_clause:
+                self.__update_score_Jeroslow_Wang_dictionary(literal, learned_clause_size)
+
+        # VSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
+            for literal in learned_clause:
+                self.__update_score_VSIDS_dictionary(literal)
 
         learned_clause_id = self.__number_of_learned_clauses
         self.__number_of_learned_clauses += 1
@@ -1448,26 +1529,62 @@ class CNF:
             self.__unit_learned_clause_list = []
             self.__contradiction_learned_clause_list = []
 
+        # Jeroslow-Wang
+        if (self.__is_Jeroslow_Wang_decision_variable_heuristic()):
+            self.__initialize_Jeroslow_Wang_decision_variable_heuristic()
+
+        # VSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
+            self.__number_of_conflicts_VSIDS_decision_heuristic = 0
+            self.__initialize_VSIDS_decision_variable_heuristic()
+
         # Clause deletion
         if (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.Restart):
             self.__clause_deletion()
+        
         return True
 
     # Decision variable
     def decision_literal(self):
-        # Greedy decision literal
+        """
+        Return a decision literal
+        """
+
+        # Greedy decision
         if (self.__decision_heuristic_enum == DecisionHeuristicEnum.Greedy):
             return self.__decision_literal_greedy()
 
-        # Random decision literal
+        # Random decision
         if (self.__decision_heuristic_enum == DecisionHeuristicEnum.Random):
             return self.__decision_literal_random()
 
-        raise MyException.UndefinedClauseLearningCnfException(str(self.__decision_heuristic_enum))
-    
+        # VSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
+            # Heap is not created
+            if (self.__score_VSIDS_heap is None):
+                self.__create_score_VSIDS_heap()
+
+            if (len(self.__score_VSIDS_heap)):
+                return self.__score_VSIDS_heap[0][1] # (score, literal)
+            else:
+                return None
+
+        # Jeroslow-Wang
+        if (self.__is_Jeroslow_Wang_decision_variable_heuristic()):
+            # Heap is not created
+            if (self.__score_Jeroslow_Wang_heap is None):
+                self.__create_score_Jeroslow_Wang_heap()
+
+            if (len(self.__score_Jeroslow_Wang_heap)):
+                return self.__score_Jeroslow_Wang_heap[0][1] # (score, literal)
+            else:
+                return None
+
+        raise MyException.UndefinedDecisionHeuristicCnfException(str(self.__decision_heuristic_enum))
+
     def __decision_literal_greedy(self):
         """
-        Return a decision literal candidate
+        Return a decision literal
         """
 
         for clause in self.__cnf:
@@ -1481,35 +1598,243 @@ class CNF:
                     return x
 
         if (self.exists_undefined_variable()):
-          return self.first_undefined_variable()
+            return self.first_undefined_variable()
 
         return None
 
     def __decision_literal_random(self):
         """
-        Return a random decision literal candidate
+        Return a random decision literal
         """
 
-        literal_hashset = set()
+        # literal_hashset = set()
 
+        # for clause in self.__cnf:
+        #     # Clause is satisfied
+        #     if (any(x in self.__partial_assignment_only_literals_hashset for x in clause)):
+        #         continue
+
+        #     # Clause is unresolved
+        #     for x in clause:
+        #         if (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset):
+        #             literal_hashset.add(x)
+
+        # if (literal_hashset):
+        #     return random.sample(literal_hashset, 1)[0]
+
+        # for x in self.__undefined_literals_hashset:
+        #     if ((x not in self.__partial_assignment_list) and (-x not in self.__partial_assignment_list) and (-x is not literal_hashset)):
+        #         return x
+
+        # return None
+
+        if (not self.__undefined_literals_hashset):
+            return None
+
+        return random.choice(list(self.__undefined_literals_hashset))
+
+    def __is_Jeroslow_Wang_decision_variable_heuristic(self):
+        """
+        Return true if the decision variable heuristic is Jeroslow-Wang, otherwise false
+        """
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangOneSided or
+            self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangOneSidedDynamic or
+            self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangTwoSided or
+            self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangTwoSidedDynamic):
+            return True
+
+        return False
+
+    def __is_dynamic_Jeroslow_Wang_decision_variable_heuristic(self):
+        """
+        Return true if the decision variable heuristic is dynamic Jeroslow-Wang, otherwise false
+        """
+
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangOneSidedDynamic or
+            self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangTwoSidedDynamic):
+            return True
+
+        return False
+
+    def __is_one_sided_Jeroslow_Wang_decision_variable_heuristic(self):
+        """
+        Return true if the decision variable heuristic is one-sided Jeroslow-Wang, otherwise false
+        """
+
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangOneSided or
+            self.__decision_heuristic_enum == DecisionHeuristicEnum.JeroslowWangOneSidedDynamic):
+            return True
+
+        return False
+
+    def __initialize_Jeroslow_Wang_decision_variable_heuristic(self):
+        self.__score_Jeroslow_Wang_dictionary = {}
+        self.__score_Jeroslow_Wang_heap = None
+
+        # Create dictionary
+        for literal in self.__literal_list:
+            self.__score_Jeroslow_Wang_dictionary[literal] = 0
+
+        # Fill dictionary
         for clause in self.__cnf:
-            # Clause is satisfied
-            if (any(x in self.__partial_assignment_only_literals_hashset for x in clause)):
+            clause_size = len(clause)
+            for literal in clause:
+                self.__update_score_Jeroslow_Wang_dictionary(literal, clause_size)
+
+        # Create heap
+        self.__create_score_Jeroslow_Wang_heap()
+
+    def __update_score_Jeroslow_Wang_dictionary(self, literal, clause_size):
+        self.__score_Jeroslow_Wang_dictionary[literal] += 2 ** (-clause_size)
+
+        if (literal in self.__undefined_literals_hashset):
+            self.__score_Jeroslow_Wang_heap = None
+
+    def __create_score_Jeroslow_Wang_heap(self):
+        temp_list = []
+
+        for literal in self.__undefined_literals_hashset:
+            # Negative literal
+            if (literal < 0):
                 continue
 
-            # Clause is unresolved
-            for x in clause:
-                if (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset):
-                    literal_hashset.add(x)
+            score_positive = self.__score_Jeroslow_Wang_dictionary[literal]
+            score_negative = self.__score_Jeroslow_Wang_dictionary[-literal]
 
-        if (literal_hashset):
-            return random.sample(literal_hashset, 1)[0]
+            if (score_positive > score_negative):
+                # One-sided
+                if (self.__is_one_sided_Jeroslow_Wang_decision_variable_heuristic()):
+                    temp_list.append((-score_positive, literal))
+                # Two-sided
+                else:
+                    temp_list.append((-(score_positive + score_negative), literal))
+            else:
+                # One-sided
+                if (self.__is_one_sided_Jeroslow_Wang_decision_variable_heuristic()):
+                    temp_list.append((-score_negative, -literal))
+                # Two-sided
+                else:
+                    temp_list.append((-(score_positive + score_negative), -literal))
 
-        for x in self.__undefined_literals_hashset:
-            if ((x not in self.__partial_assignment_list) and (-x not in self.__partial_assignment_list) and (-x is not literal_hashset)):
-                return x
+        self.__score_Jeroslow_Wang_heap = temp_list
+        heapq.heapify(self.__score_Jeroslow_Wang_heap)
 
-        return None
+    def __add_variable_to_score_Jeroslow_Wang_heap(self, variable):
+        # Variable does not exist
+        if (variable not in self.__variable_list):
+            raise MyException.VariableDoesNotExistCnfException(str(variable))
+
+        # Heap is not created
+        if (self.__score_Jeroslow_Wang_heap is None):
+            self.__create_score_Jeroslow_Wang_heap()
+
+        score_positive = self.__score_Jeroslow_Wang_dictionary[variable]
+        score_negative = self.__score_Jeroslow_Wang_dictionary[-variable]
+
+        temp_tuple = (0, 0)
+
+        if (score_positive > score_negative):
+            # One-sided
+            if (self.__is_one_sided_Jeroslow_Wang_decision_variable_heuristic()):
+                temp_tuple = (-score_positive, variable)
+            # Two-sided
+            else:
+                temp_tuple = (-(score_positive + score_negative), variable)
+        else:
+            # One-sided
+            if (self.__is_one_sided_Jeroslow_Wang_decision_variable_heuristic()):
+                temp_tuple = (-score_negative, -variable)
+            # Two-sided
+            else:
+                temp_tuple = (-(score_positive + score_negative), -variable)
+
+        if (temp_tuple in self.__score_Jeroslow_Wang_heap):
+            raise MyException.SomethingWrongException("Duplication in the heap! (Jeroslow-Wang)\nValue: {0}\nHeap: {1}".format(temp_tuple, self.__score_Jeroslow_Wang_heap))
+
+        heapq.heappush(self.__score_Jeroslow_Wang_heap, temp_tuple)
+
+    def __initialize_VSIDS_decision_variable_heuristic(self):
+        self.__score_VSIDS_dictionary = {}
+        self.__score_VSIDS_heap = None
+
+        # Create dictionary
+        for literal in self.__literal_list:
+            self.__score_VSIDS_dictionary[literal] = 0
+
+        # Fill dictionary
+        for clause in self.__cnf:
+            for literal in clause:
+                self.__update_score_VSIDS_dictionary(literal)
+
+        # Create heap
+        self.__create_score_VSIDS_heap()
+
+    def __decay_VSIDS_decision_heuristic(self):
+        """
+        Return true if decay happened otherwise false
+        """
+
+        if (self.__number_of_conflicts_VSIDS_decision_heuristic != self.__decay_period_VSIDS_decision_heuristic):
+            return False
+
+        self.__number_of_decay += 1
+        self.__number_of_conflicts_VSIDS_decision_heuristic = 0
+
+        # Update dictionary
+        for literal in self.__score_VSIDS_dictionary:
+            self.__score_VSIDS_dictionary[literal] /= self.__decay_constant_VSIDS_decision_heuristic
+
+        # Clear heap
+        self.__score_VSIDS_heap = None
+    
+    def __update_score_VSIDS_dictionary(self, literal, number = 1):
+        self.__score_VSIDS_dictionary[literal] += number
+
+        if (literal in self.__undefined_literals_hashset):
+            self.__score_VSIDS_heap = None
+      
+    def __create_score_VSIDS_heap(self):
+        temp_list = []
+
+        for literal in self.__undefined_literals_hashset:
+            # Negative literal
+            if (literal < 0):
+                continue
+
+            score_positive = self.__score_VSIDS_dictionary[literal]
+            score_negative = self.__score_VSIDS_dictionary[-literal]
+
+            if (score_positive > score_negative):
+                temp_list.append((-score_positive, literal))
+            else:
+                temp_list.append((-score_negative, -literal))
+
+        self.__score_VSIDS_heap = temp_list
+        heapq.heapify(self.__score_VSIDS_heap)
+
+    def __add_variable_to_score_VSIDS_heap(self, variable):
+        # Variable does not exist
+        if (variable not in self.__variable_list):
+            raise MyException.VariableDoesNotExistCnfException(str(variable))
+
+        # Heap is not created
+        if (self.__score_VSIDS_heap is None):
+            self.__create_score_VSIDS_heap()
+
+        score_positive = self.__score_VSIDS_dictionary[variable]
+        score_negative = self.__score_VSIDS_dictionary[-variable]
+
+        temp_tuple = (0, 0)
+
+        if (score_positive > score_negative):
+            temp_tuple = (-score_positive, variable)
+        else:
+            temp_tuple = (-score_negative, -variable)
+
+        if (temp_tuple in self.__score_VSIDS_heap):
+            raise MyException.SomethingWrongException("Duplication in the heap! (VSIDS)\nValue: {0}\nHeap: {1}".format(temp_tuple, self.__score_VSIDS_heap))
+
+        heapq.heappush(self.__score_VSIDS_heap, temp_tuple)
 
     # Property
     @property
@@ -1609,7 +1934,8 @@ class CNF:
         current_decision_level setter
         """
 
-        if (new_decision_level < 0):
+        # -1 == assumptions
+        if (new_decision_level < -1):
             raise MyException.InvalidDecisionLevelCnfException(new_decision_level)
 
         self.__current_decision_level = new_decision_level
@@ -1693,3 +2019,11 @@ class CNF:
         """
 
         return self.__active_learned_clause_hashset
+
+    @property
+    def number_of_decay(self):
+        """
+        number_of_decay getter
+        """
+
+        return self.__number_of_decay
