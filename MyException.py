@@ -226,3 +226,14 @@ class VariableDoesNotExistCnfException(Exception):
 
     def __init__(self, message):
         super().__init__("Variable does not exist: " + message)
+
+class ClauseDoesNotCauseAContradictionCnfException(Exception):
+    """
+    Clause does not cause a contradiction
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Clause does not cause a contradiction!")
+        else:
+            super().__init__("Clause does not cause a contradiction: " + message) 

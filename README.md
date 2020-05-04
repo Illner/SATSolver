@@ -47,6 +47,9 @@ A heuristic for regularly deleting some of the learned clauses:
 
 5 - keep active clauses and remove subsumed clauses
 
+6 - keep active clauses (version 2)
+
+7 - keep active clauses (version 2) and remove subsumed clauses
 
 ### DecisionHeuristic ###
 1 - first literal, which is found, is used

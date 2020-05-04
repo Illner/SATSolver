@@ -6,7 +6,9 @@ class ClauseDeletionHowHeuristicEnum(Enum):
     KeepShortClauses = 2,
     KeepShortClausesAndRemoveSubsumedClauses = 3,
     KeepActiveClauses = 4,
-    KeepActiveClausesAndRemoveSubsumedClauses = 5
+    KeepActiveClausesAndRemoveSubsumedClauses = 5,
+    KeepActiveClauses2 = 6,
+    KeepActiveClauses2AndRemoveSubsumedClauses = 7
 
 class ClauseDeletionWhenHeuristicEnum(Enum):
     none = 0,

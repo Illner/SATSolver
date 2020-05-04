@@ -86,15 +86,16 @@ class CDCL:
             number_of_assigned_literals_before_unit_propagation = len(self.__cnf.partial_assignment)
 
             # Unit propagation
-            level = self.__cnf.unit_propagation()
+            contradiction_clause = self.__cnf.unit_propagation()
             self.__increment_number_of_steps_of_unit_propagation(len(self.__cnf.partial_assignment) - number_of_assigned_literals_before_unit_propagation)
 
-            # CNF is not satisfied
-            if (level is not None and self.__cnf.current_decision_level == 0):
+            # CNF is unsatisfied
+            if (contradiction_clause is not None and self.__cnf.current_decision_level == 0):
                 return False
 
             # Contradiction occurs
-            if (level is not None):
+            if (contradiction_clause is not None):
+                level = self.__cnf.conflict_analysis(contradiction_clause)
                 self.__cnf.backtrack_to_decision_level(level)
                 self.__cnf.current_decision_level = level
                 continue

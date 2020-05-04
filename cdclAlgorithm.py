@@ -135,7 +135,7 @@ try:
                 decision_heuristic = DecisionHeuristicEnum.eVSIDS
         # ClauseDeletionHowHeuristic
         elif (sys.argv[i].startswith("-ClauseDeletionHowHeuristic=")):
-            number = is_valid_parameter(sys.argv[i][len("-ClauseDeletionHowHeuristic="):], upper_bound=5)
+            number = is_valid_parameter(sys.argv[i][len("-ClauseDeletionHowHeuristic="):], upper_bound=7)
             if (number is None):
                 raise MyException.InvalidArgumentsCDCLException("ClauseDeletionHowHeuristic")
             if (number == 1):
@@ -146,8 +146,12 @@ try:
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepShortClausesAndRemoveSubsumedClauses
             elif (number == 4):
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses
-            else:
+            elif (number == 5):
                 clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses
+            elif (number == 6):
+                clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses2
+            else:
+                clause_deletion_how_heuristic = ClauseDeletionHowHeuristicEnum.KeepActiveClauses2AndRemoveSubsumedClauses
         # Assumptions
         elif (sys.argv[i].startswith("-Assumptions=")):
             temp = parse_assumptions(sys.argv[i][len("-Assumptions="):])

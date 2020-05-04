@@ -26,7 +26,9 @@ count_list = [1024, 256, 128, 64]
 log_RemoveSubsumedClauses_list = []
 log_KeepShortClauses_list = []
 log_KeepActiveClauses_list = []
+log_KeepActiveClauses2_list = []
 log_KeepActiveClausesAndRemoveSubsumedClauses_list = []
+log_KeepActiveClauses2AndRemoveSubsumedClauses_list = []
 log_KeepShortClausesAndRemoveSubsumedClauses_list = []
 
 for i in range(len(dictionary_list)):
@@ -34,7 +36,9 @@ for i in range(len(dictionary_list)):
     log_RemoveSubsumedClauses_list.append([])
     log_KeepShortClauses_list.append([])
     log_KeepActiveClauses_list.append([])
+    log_KeepActiveClauses2_list.append([])
     log_KeepActiveClausesAndRemoveSubsumedClauses_list.append([])
+    log_KeepActiveClauses2AndRemoveSubsumedClauses_list.append([])
     log_KeepShortClausesAndRemoveSubsumedClauses_list.append([])
 
     dictionary_path = os.path.join(path, dictionary_list[i])
@@ -186,6 +190,49 @@ for i in range(len(dictionary_list)):
 
         print()
 
+        # KeepActiveClauses2
+        cnf = CNF(input_formula, 
+                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
+                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClauses2,
+                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.Restart,
+                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
+        cdcl = CDCL(cnf)
+        result = cdcl.CDCL()
+
+        if (not cnf.verify(result)):
+            raise MyException.SomethingWrongException("Invalid model - KeepActiveClauses2")
+
+        if (is_sat and result is None):
+            raise MyException.SomethingWrongException("Invalid model - KeepActiveClauses2")
+
+        print("Time: " + str(cdcl.time))
+        print("Number of decisions: " + str(cdcl.number_of_decisions))
+        print("Number of steps of unit propagation: " + str(cdcl.number_of_steps_of_unit_propagation))
+        print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
+        print("Number of deleted learned clauses: " + str(cnf.number_of_deleted_learned_clauses))
+        print("Number of clause deletions: " + str(cnf.number_of_clause_deletions))
+        print("Number of contradictions: " + str(cnf.number_of_contradictions))
+        print("Number of contradictions caused by learned clauses: " + str(cnf.number_of_contradictions_caused_by_learned_clauses))
+        print("Number of unit propagations: " + str(cnf.number_of_unit_propagations))
+        print("Number of unit propagations caused by learned clauses: " + str(cnf.number_of_unit_propagations_caused_by_learned_clauses))
+        print("Number of restarts: " + str(cnf.number_of_restarts))
+
+        log_KeepActiveClauses2_list[i].append((cdcl.time, 
+                                               cdcl.number_of_decisions, 
+                                               cdcl.number_of_steps_of_unit_propagation, 
+                                               cnf.number_of_checked_clauses,
+                                               cnf.number_of_deleted_learned_clauses,
+                                               cnf.number_of_clause_deletions,
+                                               cnf.number_of_contradictions,
+                                               cnf.number_of_contradictions_caused_by_learned_clauses,
+                                               cnf.number_of_unit_propagations,
+                                               cnf.number_of_unit_propagations_caused_by_learned_clauses,
+                                               cnf.number_of_restarts))
+
+        print()
+
         # KeepActiveClausesAndRemoveSubsumedClauses
         cnf = CNF(input_formula, 
                   unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
@@ -226,6 +273,49 @@ for i in range(len(dictionary_list)):
                                                                       cnf.number_of_unit_propagations,
                                                                       cnf.number_of_unit_propagations_caused_by_learned_clauses,
                                                                       cnf.number_of_restarts))
+
+        print()
+
+        # KeepActiveClauses2AndRemoveSubsumedClauses
+        cnf = CNF(input_formula, 
+                  unit_propagation_enum=UnitPropagationEnum.WatchedLiterals,
+                  decision_heuristic_enum=DecisionHeuristicEnum.Random,
+                  clause_learning_enum=ClauseLearningEnum.StopAtTheFirstUIP, 
+                  clause_deletion_how_heuristic_enum=ClauseDeletionHowHeuristicEnum.KeepActiveClauses2AndRemoveSubsumedClauses,
+                  clause_deletion_when_heuristic_enum=ClauseDeletionWhenHeuristicEnum.Restart,
+                  restart_strategy_enum=RestartStrategyEnum.LubyStrategy)
+        cdcl = CDCL(cnf)
+        result = cdcl.CDCL()
+
+        if (not cnf.verify(result)):
+            raise MyException.SomethingWrongException("Invalid model - KeepActiveClauses2AndRemoveSubsumedClauses")
+
+        if (is_sat and result is None):
+            raise MyException.SomethingWrongException("Invalid model - KeepActiveClauses2AndRemoveSubsumedClauses")
+
+        print("Time: " + str(cdcl.time))
+        print("Number of decisions: " + str(cdcl.number_of_decisions))
+        print("Number of steps of unit propagation: " + str(cdcl.number_of_steps_of_unit_propagation))
+        print("Number of checked clauses: " + str(cnf.number_of_checked_clauses))
+        print("Number of deleted learned clauses: " + str(cnf.number_of_deleted_learned_clauses))
+        print("Number of clause deletions: " + str(cnf.number_of_clause_deletions))
+        print("Number of contradictions: " + str(cnf.number_of_contradictions))
+        print("Number of contradictions caused by learned clauses: " + str(cnf.number_of_contradictions_caused_by_learned_clauses))
+        print("Number of unit propagations: " + str(cnf.number_of_unit_propagations))
+        print("Number of unit propagations caused by learned clauses: " + str(cnf.number_of_unit_propagations_caused_by_learned_clauses))
+        print("Number of restarts: " + str(cnf.number_of_restarts))
+
+        log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i].append((cdcl.time, 
+                                                                       cdcl.number_of_decisions, 
+                                                                       cdcl.number_of_steps_of_unit_propagation, 
+                                                                       cnf.number_of_checked_clauses,
+                                                                       cnf.number_of_deleted_learned_clauses,
+                                                                       cnf.number_of_clause_deletions,
+                                                                       cnf.number_of_contradictions,
+                                                                       cnf.number_of_contradictions_caused_by_learned_clauses,
+                                                                       cnf.number_of_unit_propagations,
+                                                                       cnf.number_of_unit_propagations_caused_by_learned_clauses,
+                                                                       cnf.number_of_restarts))
 
         print()
 
@@ -464,6 +554,70 @@ for i in range(len(log_KeepActiveClauses_list)):
     number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClauses.append(number_of_unit_propagations_caused_by_learned_clauses_average)
     number_of_restarts_y_KeepActiveClauses.append(number_of_restarts_average)
 
+# Log KeepActiveClauses2
+time_y_KeepActiveClauses2 = []
+number_of_decisions_y_KeepActiveClauses2 = []
+number_of_steps_of_unit_propagation_y_KeepActiveClauses2 = []
+number_of_checked_clauses_y_KeepActiveClauses2 = []
+number_of_deleted_learned_clauses_y_KeepActiveClauses2 = []
+number_of_clause_deletions_y_KeepActiveClauses2 = []
+number_of_contradiction_y_KeepActiveClauses2 = []
+number_of_contradictions_caused_by_learned_clauses_y_KeepActiveClauses2 = []
+number_of_unit_propagations_y_KeepActiveClauses2 = []
+number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClauses2 = []
+number_of_restarts_y_KeepActiveClauses2 = []
+
+for i in range(len(log_KeepActiveClauses2_list)):
+    time_average = 0
+    number_of_decisions_average = 0
+    number_of_steps_of_unit_propagation_average = 0
+    number_of_checked_clauses_average = 0
+    number_of_deleted_learned_clauses_average = 0
+    number_of_clause_deletions_average = 0
+    number_of_contradiction_average = 0
+    number_of_contradictions_caused_by_learned_clauses_average = 0
+    number_of_unit_propagations_average = 0
+    number_of_unit_propagations_caused_by_learned_clauses_average = 0
+    number_of_restarts_average = 0
+
+    for j in range(len(log_KeepActiveClauses2_list[i])):
+        time_average += log_KeepActiveClauses2_list[i][j][0]
+        number_of_decisions_average += log_KeepActiveClauses2_list[i][j][1]
+        number_of_steps_of_unit_propagation_average += log_KeepActiveClauses2_list[i][j][2]
+        number_of_checked_clauses_average += log_KeepActiveClauses2_list[i][j][3]
+        number_of_deleted_learned_clauses_average += log_KeepActiveClauses2_list[i][j][4]
+        number_of_clause_deletions_average += log_KeepActiveClauses2_list[i][j][5]
+        number_of_contradiction_average += log_KeepActiveClauses2_list[i][j][6]
+        number_of_contradictions_caused_by_learned_clauses_average += log_KeepActiveClauses2_list[i][j][7]
+        number_of_unit_propagations_average += log_KeepActiveClauses2_list[i][j][8]
+        number_of_unit_propagations_caused_by_learned_clauses_average += log_KeepActiveClauses2_list[i][j][9]
+        number_of_restarts_average += log_KeepActiveClauses2_list[i][j][10]
+    size = len(log_KeepActiveClauses2_list[i])
+    if (size != 0):
+        time_average /= size
+        number_of_decisions_average /= size
+        number_of_steps_of_unit_propagation_average /= size
+        number_of_checked_clauses_average /= size
+        number_of_deleted_learned_clauses_average /= size
+        number_of_clause_deletions_average /= size
+        number_of_contradiction_average /= size
+        number_of_contradictions_caused_by_learned_clauses_average /= size
+        number_of_unit_propagations_average /= size
+        number_of_unit_propagations_caused_by_learned_clauses_average /= size
+        number_of_restarts_average /= size
+
+    time_y_KeepActiveClauses2.append(time_average)
+    number_of_decisions_y_KeepActiveClauses2.append(number_of_decisions_average)
+    number_of_steps_of_unit_propagation_y_KeepActiveClauses2.append(number_of_steps_of_unit_propagation_average)
+    number_of_checked_clauses_y_KeepActiveClauses2.append(number_of_checked_clauses_average)
+    number_of_deleted_learned_clauses_y_KeepActiveClauses2.append(number_of_deleted_learned_clauses_average)
+    number_of_clause_deletions_y_KeepActiveClauses2.append(number_of_clause_deletions_average)
+    number_of_contradiction_y_KeepActiveClauses2.append(number_of_contradiction_average)
+    number_of_contradictions_caused_by_learned_clauses_y_KeepActiveClauses2.append(number_of_contradictions_caused_by_learned_clauses_average)
+    number_of_unit_propagations_y_KeepActiveClauses2.append(number_of_unit_propagations_average)
+    number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClauses2.append(number_of_unit_propagations_caused_by_learned_clauses_average)
+    number_of_restarts_y_KeepActiveClauses2.append(number_of_restarts_average)
+
 # Log KeepActiveClausesAndRemoveSubsumedClauses
 time_y_KeepActiveClausesAndRemoveSubsumedClauses = []
 number_of_decisions_y_KeepActiveClausesAndRemoveSubsumedClauses = []
@@ -527,6 +681,70 @@ for i in range(len(log_KeepActiveClausesAndRemoveSubsumedClauses_list)):
     number_of_unit_propagations_y_KeepActiveClausesAndRemoveSubsumedClauses.append(number_of_unit_propagations_average)
     number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClausesAndRemoveSubsumedClauses.append(number_of_unit_propagations_caused_by_learned_clauses_average)
     number_of_restarts_y_KeepActiveClausesAndRemoveSubsumedClauses.append(number_of_restarts_average)
+
+# Log KeepActiveClauses2AndRemoveSubsumedClauses
+time_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_decisions_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_steps_of_unit_propagation_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_checked_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_deleted_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_clause_deletions_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_contradiction_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_contradictions_caused_by_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_unit_propagations_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+number_of_restarts_y_KeepActiveClauses2AndRemoveSubsumedClauses = []
+
+for i in range(len(log_KeepActiveClauses2AndRemoveSubsumedClauses_list)):
+    time_average = 0
+    number_of_decisions_average = 0
+    number_of_steps_of_unit_propagation_average = 0
+    number_of_checked_clauses_average = 0
+    number_of_deleted_learned_clauses_average = 0
+    number_of_clause_deletions_average = 0
+    number_of_contradiction_average = 0
+    number_of_contradictions_caused_by_learned_clauses_average = 0
+    number_of_unit_propagations_average = 0
+    number_of_unit_propagations_caused_by_learned_clauses_average = 0
+    number_of_restarts_average = 0
+
+    for j in range(len(log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i])):
+        time_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][0]
+        number_of_decisions_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][1]
+        number_of_steps_of_unit_propagation_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][2]
+        number_of_checked_clauses_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][3]
+        number_of_deleted_learned_clauses_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][4]
+        number_of_clause_deletions_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][5]
+        number_of_contradiction_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][6]
+        number_of_contradictions_caused_by_learned_clauses_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][7]
+        number_of_unit_propagations_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][8]
+        number_of_unit_propagations_caused_by_learned_clauses_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][9]
+        number_of_restarts_average += log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i][j][10]
+    size = len(log_KeepActiveClauses2AndRemoveSubsumedClauses_list[i])
+    if (size != 0):
+        time_average /= size
+        number_of_decisions_average /= size
+        number_of_steps_of_unit_propagation_average /= size
+        number_of_checked_clauses_average /= size
+        number_of_deleted_learned_clauses_average /= size
+        number_of_clause_deletions_average /= size
+        number_of_contradiction_average /= size
+        number_of_contradictions_caused_by_learned_clauses_average /= size
+        number_of_unit_propagations_average /= size
+        number_of_unit_propagations_caused_by_learned_clauses_average /= size
+        number_of_restarts_average /= size
+
+    time_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(time_average)
+    number_of_decisions_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_decisions_average)
+    number_of_steps_of_unit_propagation_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_steps_of_unit_propagation_average)
+    number_of_checked_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_checked_clauses_average)
+    number_of_deleted_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_deleted_learned_clauses_average)
+    number_of_clause_deletions_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_clause_deletions_average)
+    number_of_contradiction_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_contradiction_average)
+    number_of_contradictions_caused_by_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_contradictions_caused_by_learned_clauses_average)
+    number_of_unit_propagations_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_unit_propagations_average)
+    number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_unit_propagations_caused_by_learned_clauses_average)
+    number_of_restarts_y_KeepActiveClauses2AndRemoveSubsumedClauses.append(number_of_restarts_average)
 
 # Log KeepShortClausesAndRemoveSubsumedClauses
 time_y_KeepShortClausesAndRemoveSubsumedClauses = []
@@ -720,12 +938,65 @@ print(number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClausesA
 print("Number of restarts: ")
 print(number_of_restarts_y_KeepActiveClausesAndRemoveSubsumedClauses)
 
+print()
+
+print("KeepActiveClauses2")
+print("Time: ")
+print(time_y_KeepActiveClauses2)
+print("Number of decisions: ")
+print("Number of steps of unit propagation: ")
+print(number_of_steps_of_unit_propagation_y_KeepActiveClauses2)
+print("Number of checked clauses: ")
+print(number_of_checked_clauses_y_KeepActiveClauses2)
+print("Number of deleted learned clauses: ")
+print(number_of_deleted_learned_clauses_y_KeepActiveClauses2)
+print("Number of clause deletions: ")
+print(number_of_clause_deletions_y_KeepActiveClauses2)
+print("Number of contradictions: ")
+print(number_of_contradiction_y_KeepActiveClauses2)
+print("Number of contradictions caused by learned clauses: ")
+print(number_of_contradictions_caused_by_learned_clauses_y_KeepActiveClauses2)
+print("Number of unit propagations: ")
+print(number_of_unit_propagations_y_KeepActiveClauses2)
+print("Number of unit propagations caused by learned clauses: ")
+print(number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClauses2)
+print("Number of restarts: ")
+print(number_of_restarts_y_KeepActiveClauses2)
+
+print()
+
+print("KeepActiveClauses2AndRemoveSubsumedClauses")
+print("Time: ")
+print(time_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of decisions: ")
+print(number_of_decisions_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of steps of unit propagation: ")
+print(number_of_steps_of_unit_propagation_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of checked clauses: ")
+print(number_of_checked_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of deleted learned clauses: ")
+print(number_of_deleted_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of clause deletions: ")
+print(number_of_clause_deletions_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of contradictions: ")
+print(number_of_contradiction_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of contradictions caused by learned clauses: ")
+print(number_of_contradictions_caused_by_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of unit propagations: ")
+print(number_of_unit_propagations_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of unit propagations caused by learned clauses: ")
+print(number_of_unit_propagations_caused_by_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+print("Number of restarts: ")
+print(number_of_restarts_y_KeepActiveClauses2AndRemoveSubsumedClauses)
+
 # Time
 plt.plot(x_axis_variables, time_y_RemoveSubsumedClauses, color="blue", label='RemoveSubsumedClauses')
 plt.plot(x_axis_variables, time_y_KeepShortClauses, color="red", label='KeepShortClauses')
 plt.plot(x_axis_variables, time_y_KeepShortClausesAndRemoveSubsumedClauses, color="purple", label='KeepShortClausesAndRemoveSubsumedClauses')
 plt.plot(x_axis_variables, time_y_KeepActiveClauses, color="green", label='KeepActiveClauses')
 plt.plot(x_axis_variables, time_y_KeepActiveClausesAndRemoveSubsumedClauses, color="yellow", label='KeepActiveClausesAndRemoveSubsumedClauses')
+plt.plot(x_axis_variables, time_y_KeepActiveClauses2, color="orange", label='KeepActiveClauses2')
+plt.plot(x_axis_variables, time_y_KeepActiveClauses2AndRemoveSubsumedClauses, color="black", label='KeepActiveClauses2AndRemoveSubsumedClauses')
 plt.title('Time')
 plt.xlabel('Number of variables')
 plt.ylabel('Time (s)')
@@ -738,6 +1009,8 @@ plt.plot(x_axis_variables, number_of_decisions_y_KeepShortClauses, color="red", 
 plt.plot(x_axis_variables, number_of_decisions_y_KeepShortClausesAndRemoveSubsumedClauses, color="purple", label='KeepShortClausesAndRemoveSubsumedClauses')
 plt.plot(x_axis_variables, number_of_decisions_y_KeepActiveClauses, color="green", label='KeepActiveClauses')
 plt.plot(x_axis_variables, number_of_decisions_y_KeepActiveClausesAndRemoveSubsumedClauses, color="yellow", label='KeepActiveClausesAndRemoveSubsumedClauses')
+plt.plot(x_axis_variables, number_of_decisions_y_KeepActiveClauses2, color="orange", label='KeepActiveClauses2')
+plt.plot(x_axis_variables, number_of_decisions_y_KeepActiveClauses2AndRemoveSubsumedClauses, color="black", label='KeepActiveClauses2AndRemoveSubsumedClauses')
 plt.title('Number of checked clauses')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of checked clauses')
@@ -750,6 +1023,8 @@ plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_KeepShortClause
 plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_KeepShortClausesAndRemoveSubsumedClauses, color="purple", label='KeepShortClausesAndRemoveSubsumedClauses')
 plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_KeepActiveClauses, color="green", label='KeepActiveClauses')
 plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_KeepActiveClausesAndRemoveSubsumedClauses, color="yellow", label='KeepActiveClausesAndRemoveSubsumedClauses')
+plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_KeepActiveClauses2, color="orange", label='KeepActiveClauses2')
+plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_KeepActiveClauses2AndRemoveSubsumedClauses, color="black", label='KeepActiveClauses2AndRemoveSubsumedClauses')
 plt.title('Number of decisions')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of decisions')
@@ -762,6 +1037,8 @@ plt.plot(x_axis_variables, number_of_checked_clauses_y_KeepShortClauses, color="
 plt.plot(x_axis_variables, number_of_checked_clauses_y_KeepShortClausesAndRemoveSubsumedClauses, color="purple", label='KeepShortClausesAndRemoveSubsumedClauses')
 plt.plot(x_axis_variables, number_of_checked_clauses_y_KeepActiveClauses, color="green", label='KeepActiveClauses')
 plt.plot(x_axis_variables, number_of_checked_clauses_y_KeepActiveClausesAndRemoveSubsumedClauses, color="yellow", label='KeepActiveClausesAndRemoveSubsumedClauses')
+plt.plot(x_axis_variables, number_of_checked_clauses_y_KeepActiveClauses2, color="orange", label='KeepActiveClauses2')
+plt.plot(x_axis_variables, number_of_checked_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses, color="black", label='KeepActiveClauses2AndRemoveSubsumedClauses')
 plt.title('Number of steps of unit propagation')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of steps of unit propagation')
@@ -774,6 +1051,8 @@ plt.plot(x_axis_variables, number_of_deleted_learned_clauses_y_KeepShortClauses,
 plt.plot(x_axis_variables, number_of_deleted_learned_clauses_y_KeepShortClausesAndRemoveSubsumedClauses, color="purple", label='KeepShortClausesAndRemoveSubsumedClauses')
 plt.plot(x_axis_variables, number_of_deleted_learned_clauses_y_KeepActiveClauses, color="green", label='KeepActiveClauses')
 plt.plot(x_axis_variables, number_of_deleted_learned_clauses_y_KeepActiveClausesAndRemoveSubsumedClauses, color="yellow", label='KeepActiveClausesAndRemoveSubsumedClauses')
+plt.plot(x_axis_variables, number_of_deleted_learned_clauses_y_KeepActiveClauses2, color="orange", label='KeepActiveClauses2')
+plt.plot(x_axis_variables, number_of_deleted_learned_clauses_y_KeepActiveClauses2AndRemoveSubsumedClauses, color="black", label='KeepActiveClauses2AndRemoveSubsumedClauses')
 plt.title('Number of deleted learned clauses')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of deleted learned clauses')
@@ -786,6 +1065,8 @@ plt.plot(x_axis_variables, number_of_clause_deletions_y_KeepShortClauses, color=
 plt.plot(x_axis_variables, number_of_clause_deletions_y_KeepShortClausesAndRemoveSubsumedClauses, color="purple", label='KeepShortClausesAndRemoveSubsumedClauses')
 plt.plot(x_axis_variables, number_of_clause_deletions_y_KeepActiveClauses, color="green", label='KeepActiveClauses')
 plt.plot(x_axis_variables, number_of_clause_deletions_y_KeepActiveClausesAndRemoveSubsumedClauses, color="yellow", label='KeepActiveClausesAndRemoveSubsumedClauses')
+plt.plot(x_axis_variables, number_of_clause_deletions_y_KeepActiveClauses2, color="orange", label='KeepActiveClauses2')
+plt.plot(x_axis_variables, number_of_clause_deletions_y_KeepActiveClauses2AndRemoveSubsumedClauses, color="black", label='KeepActiveClauses2AndRemoveSubsumedClauses')
 plt.title('Number of clause deletions')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of clause deletions')

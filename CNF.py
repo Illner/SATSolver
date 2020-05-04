@@ -455,8 +455,9 @@ class CNF:
         1) Learned clauses are not supported
             Return true if a contradiction occurs, otherwise false
         2) Learned clauses are supported
-            Return new decision level (assertive level) if a contradiction occurs, otherwise None
+            If a contradiction occurs, return a clause which causes the contradiction, otherwise return None
         """
+
         temp_contradiction = None
 
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
@@ -466,31 +467,44 @@ class CNF:
         else:
             raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
-        # VSIDS - Contradiction
-        if (temp_contradiction is not None and self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
-            self.__number_of_conflicts_VSIDS_decision_heuristic += 1
-            self.__decay_VSIDS_decision_heuristic()
-
-        # Learned cluases are not supported - No contradiction
-        if (not self.__use_learned_clauses and temp_contradiction is None):
-            return False
-
-        # Learned clauses are not supported - Contradiction
+        # Learned clauses are not supported
         if (not self.__use_learned_clauses):
-            self.__number_of_contradictions += 1
-            return True
+            # No contradiction
+            if (temp_contradiction is None):
+                return False
+            # Contradiction
+            else:
+                self.__number_of_contradictions += 1
+                return True
 
-        # Learned clauses are supported - No contradiction
-        if (temp_contradiction is None):
-            return None
+        # Learned clauses are supported
+        return temp_contradiction
 
-        # Learned clauses are supported - Contradiction
-        (clause_id, is_original_clause) = temp_contradiction
+    def conflict_analysis(self, contradiction_clause):
+        """
+        Return new decision level (assertive level)
+        """
+
+        try:
+            (clause_id, is_original_clause) = contradiction_clause
+        except TypeError:
+            raise MyException.SomethingWrongException("Invalid type of contradiction clause!")
+
+        # Check if the clause causes a contradiction
+        if (is_original_clause and not self.__is_clause_unsatisfied(clause_id)):
+            raise MyException.ClauseDoesNotCauseAContradictionCnfException(self.__cnf[clause_id])
+        if (not is_original_clause and not self.__is_learned_clause_unsatisfied(clause_id)):
+            raise MyException.ClauseDoesNotCauseAContradictionCnfException(self.__learned_clauses[clause_id])
 
         self.__number_of_contradictions += 1
         if (not is_original_clause):
             self.__number_of_contradictions_caused_by_learned_clauses += 1
-        
+
+        # VSIDS
+        if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
+            self.__number_of_conflicts_VSIDS_decision_heuristic += 1
+            self.__decay_VSIDS_decision_heuristic()
+
         # Restart
         if (self.__has_restart()):
             self.__increment_number_of_conflicts()
@@ -509,7 +523,7 @@ class CNF:
             temp_contradiction_clause = self.__cnf[clause_id]
         else:
             temp_contradiction_clause = self.__learned_clauses[clause_id]
-            
+
         if (self.__clause_learning_enum == ClauseLearningEnum.StopWhenTheLiteralAtCurrentDecisionLevelHasNoAntecedent):
             assertive_clause = self.__create_assertive_clause(temp_contradiction_clause)
             assertive_level = self.__get_assertive_level(assertive_clause)
@@ -563,6 +577,13 @@ class CNF:
 
                 self.__update_learned_clauses_unit_propagation(l, learned_clause_id, False)
                 
+                # Update active_counter_learned_clause_dictionary
+                if (self.__is_keep_active_clauses_2_heuristic()):
+                    if (learned_clause_id not in self.__active_counter_learned_clause_dictionary):
+                        self.__active_counter_learned_clause_dictionary[learned_clause_id] = 1
+                    else:
+                        self.__active_counter_learned_clause_dictionary[learned_clause_id] += 1
+
                 self.__number_of_unit_propagations += 1
                 self.__number_of_unit_propagations_caused_by_learned_clauses += 1
                 self.add_literal_to_partial_assignment(l)
@@ -639,6 +660,13 @@ class CNF:
                         self.__update_learned_clauses_unit_propagation(x, clause_id, is_original_clause)
                         if (not is_original_clause):
                             self.__number_of_unit_propagations_caused_by_learned_clauses += 1
+
+                    # Update active_counter_learned_clause_dictionary
+                    if (not is_original_clause and self.__is_keep_active_clauses_2_heuristic()):
+                        if (clause_id not in self.__active_counter_learned_clause_dictionary):
+                            self.__active_counter_learned_clause_dictionary[clause_id] = 1
+                        else:
+                            self.__active_counter_learned_clause_dictionary[clause_id] += 1
 
                     self.__number_of_unit_propagations += 1
                     self.add_literal_to_partial_assignment(x)
@@ -830,6 +858,10 @@ class CNF:
         clause = self.__cnf[clause_id]
         return any(x in self.__partial_assignment_only_literals_hashset for x in clause)
     
+    def __is_clause_unsatisfied(self, clause_id):
+        clause = self.__cnf[clause_id]
+        return all(-x in self.__partial_assignment_only_literals_hashset for x in clause)
+
     def __undefined_literal_list_for_clause(self, clause_id):
         clause = self.__cnf[clause_id]
         return (list(filter(lambda x: (x not in self.__partial_assignment_only_literals_hashset) and (-x not in self.__partial_assignment_only_literals_hashset), clause)))
@@ -892,6 +924,10 @@ class CNF:
     def __is_learned_clause_satisfied(self, learned_clause_id):
         learned_clause = self.__learned_clauses[learned_clause_id]
         return any(x in self.__partial_assignment_only_literals_hashset for x in learned_clause)
+
+    def __is_learned_clause_unsatisfied(self, learned_clause_id):
+        learned_clause = self.__learned_clauses[learned_clause_id]
+        return all(-x in self.__partial_assignment_only_literals_hashset for x in learned_clause)
 
     def __undefined_literal_list_for_learned_clause(self, learned_clause_id):
         learned_clause = self.__learned_clauses[learned_clause_id]
@@ -1153,7 +1189,8 @@ class CNF:
             return
 
         # Keep active clauses
-        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses):
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses or
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses2):
             learned_clauses_to_delete = self.__keep_active_clauses_heuristic()
             self.__remove_learned_clauses(learned_clauses_to_delete)
             return
@@ -1171,7 +1208,8 @@ class CNF:
             return
 
         # Keep active clauses and remove subsumed clauses
-        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses):
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses or
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses2AndRemoveSubsumedClauses):
             learned_clauses_to_delete = self.__remove_subsumed_clauses_heuristic()
             self.__remove_learned_clauses(learned_clauses_to_delete)
             learned_clauses_to_delete = self.__keep_active_clauses_heuristic()
@@ -1297,7 +1335,20 @@ class CNF:
         """
 
         if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses or 
-            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses):
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClausesAndRemoveSubsumedClauses or
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses2 or 
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses2AndRemoveSubsumedClauses):
+            return True
+
+        return False
+
+    def __is_keep_active_clauses_2_heuristic(self):
+        """
+        Return true if the clause deletion heuristic is keep active clauses 2, otherwise false
+        """
+
+        if (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses2 or 
+            self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.KeepActiveClauses2AndRemoveSubsumedClauses):
             return True
 
         return False
@@ -1531,12 +1582,14 @@ class CNF:
 
         # Jeroslow-Wang
         if (self.__is_Jeroslow_Wang_decision_variable_heuristic()):
-            self.__initialize_Jeroslow_Wang_decision_variable_heuristic()
+            self.__score_Jeroslow_Wang_heap = None
+            # self.__initialize_Jeroslow_Wang_decision_variable_heuristic()
 
         # VSIDS
         if (self.__decision_heuristic_enum == DecisionHeuristicEnum.VSIDS):
-            self.__number_of_conflicts_VSIDS_decision_heuristic = 0
-            self.__initialize_VSIDS_decision_variable_heuristic()
+            self.__score_VSIDS_heap = None
+            # self.__number_of_conflicts_VSIDS_decision_heuristic = 0
+            # self.__initialize_VSIDS_decision_variable_heuristic()
 
         # Clause deletion
         if (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.Restart):
