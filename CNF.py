@@ -222,20 +222,22 @@ class CNF:
         if (not self.__use_learned_clauses and (not (self.__restart_strategy_enum == RestartStrategyEnum.none) or not (self.__clause_deletion_how_heuristic_enum == ClauseDeletionHowHeuristicEnum.none) or not (self.__clause_deletion_when_heuristic_enum == ClauseDeletionWhenHeuristicEnum.none))):
             raise MyException.InvalidParametersCnfException("use_learned_clauses is False but restartStrategyEnum, clauseDeletionHowHeuristicEnum or clauseDeletionWhenHeuristicEnum is not none")
 
+        self.__unit_clause_list = []
+        self.__contradiction_clause_list = []
+        if (self.__use_learned_clauses):
+            self.__unit_learned_clause_list = []
+            self.__contradiction_learned_clause_list = []
+
         # Adjacency list
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
             # CNF
             self.__counter_list = []
             self.__adjacency_list_dictionary = {}
-            self.__unit_clause_list = []
-            self.__contradiction_clause_list = []
 
             # Learned clauses
             if (self.__use_learned_clauses):
                 self.__counter_learned_clause_list = []
                 self.__adjacency_list_learned_clause_dictionary = {}
-                self.__unit_learned_clause_list = []
-                self.__contradiction_learned_clause_list = []
 
         # Wacthed literals
         if (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
@@ -363,6 +365,7 @@ class CNF:
                     if (len(clause) == 1):
                         self.__clause_watched_literals_list.append((clause[0], None))
                         self.__update_watched_list(clause[0], clause_id)
+                        self.__unit_clause_list.append(clause_id)
                     else:
                         self.__clause_watched_literals_list.append((clause[0], clause[1]))
                         self.__update_watched_list(clause[0], clause_id)
@@ -458,14 +461,7 @@ class CNF:
             If a contradiction occurs, return a clause which causes the contradiction, otherwise return None
         """
 
-        temp_contradiction = None
-
-        if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
-            temp_contradiction = self.__unit_propagation_adjacency_list()
-        elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
-            temp_contradiction = self.__unit_propagation_watched_literals()
-        else:
-            raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
+        temp_contradiction = self.__unit_propagation()
 
         # Learned clauses are not supported
         if (not self.__use_learned_clauses):
@@ -546,11 +542,11 @@ class CNF:
                 self.__max_size_of_cache = next(self.__clause_deletion_when_iterator)
                 self.__clause_deletion()
 
-    def __unit_propagation_adjacency_list(self):
+    def __unit_propagation(self):
         temp_contradiction = None
 
         while (True):
-            # CNF
+            # Original CNF
             while (self.__unit_clause_list and (temp_contradiction is None)):
                 clause_id = self.__unit_clause_list.pop()
 
@@ -602,80 +598,6 @@ class CNF:
 
         return temp_contradiction
 
-    def __unit_propagation_watched_literals(self):
-        end = False
-        temp_contradiction = None
-        unit_clause_literal_list = []
-
-        while ((not end) and (temp_contradiction is None)):
-            end = True
-            for ((w_l_1, w_l_2), clause_id, is_original_clause) in self.__my_iteration_original_and_learned_wtached_literals():
-                is_w_l_1_defined = w_l_1 not in self.__undefined_literals_hashset
-                is_w_l_2_defined = w_l_2 not in self.__undefined_literals_hashset
-
-                # Both watched literals are undefined
-                if ((not is_w_l_1_defined) and (not is_w_l_2_defined)):
-                    continue
-
-                is_w_l_1_satisfied = w_l_1 in self.__partial_assignment_only_literals_hashset
-                is_w_l_2_satisfied = w_l_2 in self.__partial_assignment_only_literals_hashset
-
-                # At least one watched literal is satisfied
-                if (is_w_l_1_satisfied or is_w_l_2_satisfied):
-                    continue
-
-                # Clause contains only one literal which is not satisfied => contradiction
-                if (((w_l_1 is None) and (is_w_l_2_defined)) or ((w_l_2 is None) and (is_w_l_1_defined))):
-                    temp_contradiction = (clause_id, is_original_clause)
-                    break
-
-                # Contradiction
-                if (is_w_l_1_defined and is_w_l_2_defined):
-                    temp_contradiction = (clause_id, is_original_clause)
-                    break
-
-                # First watched literal is undefined, the second one is unsatisfied
-                if (not is_w_l_1_defined):
-                    unit_clause_literal_list.append((w_l_1, clause_id, is_original_clause))
-                    continue
-
-                # Second watched literal is undefined, the first one is unsatisfied
-                if (not is_w_l_2_defined):
-                    unit_clause_literal_list.append((w_l_2, clause_id, is_original_clause))
-                    continue
-            
-            temp_hashset = set()
-
-            while (unit_clause_literal_list and (temp_contradiction is None)):
-                (x, clause_id, is_original_clause) = unit_clause_literal_list.pop()
-
-                if (x in temp_hashset):
-                    continue
-
-                if (-x not in temp_hashset):
-                    end = False
-                    temp_hashset.add(x)
-
-                    if (self.__use_learned_clauses):
-                        self.__update_learned_clauses_unit_propagation(x, clause_id, is_original_clause)
-                        if (not is_original_clause):
-                            self.__number_of_unit_propagations_caused_by_learned_clauses += 1
-
-                    # Update active_counter_learned_clause_dictionary
-                    if (not is_original_clause and self.__is_keep_active_clauses_2_heuristic()):
-                        if (clause_id not in self.__active_counter_learned_clause_dictionary):
-                            self.__active_counter_learned_clause_dictionary[clause_id] = 1
-                        else:
-                            self.__active_counter_learned_clause_dictionary[clause_id] += 1
-
-                    self.__number_of_unit_propagations += 1
-                    self.add_literal_to_partial_assignment(x)
-                # Contradiction
-                else:
-                    temp_contradiction = (clause_id, is_original_clause)
-        
-        return temp_contradiction
-
     def add_literal_to_partial_assignment(self, literal, check_partial_assignment = False):
         self.__partial_assignment_list.append([literal, self.__current_decision_level])
         self.__partial_assignment_only_literals_hashset.add(literal)
@@ -709,7 +631,7 @@ class CNF:
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
             self.__update_counter(literal)
         elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
-            self.__update_watched_literals(literal)
+            self.__update_watched_literals_add_literal(literal)
         else:
             raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
@@ -745,7 +667,7 @@ class CNF:
         if (self.__unit_propagation_enum == UnitPropagationEnum.AdjacencyList):
             self.__update_counter(literal)
         elif (self.__unit_propagation_enum == UnitPropagationEnum.WatchedLiterals):
-            pass;
+            self.__update_watched_literals_remove_literal(literal)
         else:
             raise MyException.UndefinedUnitPropagationCnfException(str(self.__unit_propagation_enum))
 
@@ -809,13 +731,26 @@ class CNF:
                 else:
                     self.__counter_learned_clause_list[learned_clause_id] = len(undefined_literal_list)
 
-    def __update_watched_literals(self, literal):
+    def __update_watched_literals_add_literal(self, literal):
         variable = abs(literal)
 
+        # Remove satisfied clauses from unit_clause_list and contradiction_clause_list
+        for clause_id in self.__variable_watched_literals_dictionary[variable][int (literal < 0)]:
+            if (clause_id in self.__contradiction_clause_list):
+                self.__contradiction_clause_list.remove(clause_id)
+
+            if (clause_id in self.__unit_clause_list):
+                self.__unit_clause_list.remove(clause_id)
+                
         # CNF
         clauses_to_delete_list = []
-
         for clause_id in self.__variable_watched_literals_dictionary[variable][int (literal > 0)]:
+            if (clause_id in self.__contradiction_clause_list):
+                self.__contradiction_clause_list.remove(clause_id)
+
+            if (clause_id in self.__unit_clause_list):
+                self.__unit_clause_list.remove(clause_id)
+
             w_l_1 = -literal
             w_l_2 = self.__clause_watched_literals_list[clause_id][0] if (self.__clause_watched_literals_list[clause_id][0] != w_l_1) else self.__clause_watched_literals_list[clause_id][1]
             
@@ -828,6 +763,15 @@ class CNF:
                 clauses_to_delete_list.append(clause_id)
                 self.__variable_watched_literals_dictionary[abs(w_l_1)][int (-w_l_1 > 0)].add(clause_id)
                 self.__clause_watched_literals_list[clause_id] = (w_l_1, w_l_2)
+            # Clause has only one literal which is unsatisfied
+            elif (w_l_2 is None):
+                self.__contradiction_clause_list.append(clause_id)
+            # Unit clause
+            elif (w_l_2 not in self.__partial_assignment_only_literals_hashset and -w_l_2 not in self.__partial_assignment_only_literals_hashset):
+                self.__unit_clause_list.append(clause_id)
+            # Contradiction clause
+            elif (-w_l_2 in self.__partial_assignment_only_literals_hashset):
+                self.__contradiction_clause_list.append(clause_id)
 
         for clause_id in clauses_to_delete_list:
             self.__variable_watched_literals_dictionary[variable][int (literal > 0)].remove(clause_id)
@@ -835,24 +779,100 @@ class CNF:
         if (not self.__use_learned_clauses):
             return
 
+        # Remove satisfied clauses from unit_learned_clause_list and contradiction_learned_clause
+        for learned_clause_id in self.__variable_watched_literals_learned_clause_dictionary[variable][int (literal < 0)]:
+            if (learned_clause_id in self.__contradiction_learned_clause_list):
+                self.__contradiction_learned_clause_list.remove(learned_clause_id)
+
+            if (learned_clause_id in self.__unit_learned_clause_list):
+                self.__unit_learned_clause_list.remove(learned_clause_id)
+
         # Learned clauses
         learned_clause_to_delete_list = []
         for learned_clause_id in self.__variable_watched_literals_learned_clause_dictionary[variable][int (literal > 0)]:
+            if (learned_clause_id in self.__contradiction_learned_clause_list):
+                self.__contradiction_learned_clause_list.remove(learned_clause_id)
+
+            if (learned_clause_id in self.__unit_learned_clause_list):
+                self.__unit_learned_clause_list.remove(learned_clause_id)
+
             w_l_1 = -literal
             w_l_2 = self.__learned_clause_watched_literals_list[learned_clause_id][0] if (self.__learned_clause_watched_literals_list[learned_clause_id][0] != w_l_1) else self.__learned_clause_watched_literals_list[learned_clause_id][1]
             
             self.__increment_number_of_checked_clauses()
             valid_value_for_w_l_1_iterator = filter(lambda x: (-x not in self.__partial_assignment_only_literals_hashset) and (x != w_l_2), self.__learned_clauses[learned_clause_id])
             w_l_1 = next(valid_value_for_w_l_1_iterator, None)
-
             # Exists a new valid value for watched literal
             if (w_l_1 is not None):
                 learned_clause_to_delete_list.append(learned_clause_id)
                 self.__variable_watched_literals_learned_clause_dictionary[abs(w_l_1)][int (-w_l_1 > 0)].add(learned_clause_id)
                 self.__learned_clause_watched_literals_list[learned_clause_id] = (w_l_1, w_l_2)
+            # Clause has only one literal which is unsatisfied
+            elif (w_l_2 is None):
+                self.__contradiction_learned_clause_list.append(learned_clause_id)
+            # Unit clause
+            elif (w_l_2 not in self.__partial_assignment_only_literals_hashset and -w_l_2 not in self.__partial_assignment_only_literals_hashset):
+                self.__unit_learned_clause_list.append(learned_clause_id)
+            # Contradiction clause
+            elif (-w_l_2 in self.__partial_assignment_only_literals_hashset):
+                self.__contradiction_learned_clause_list.append(learned_clause_id)
 
         for learned_clause_id in learned_clause_to_delete_list:
             self.__variable_watched_literals_learned_clause_dictionary[variable][int (literal > 0)].remove(learned_clause_id)
+
+    def __update_watched_literals_remove_literal(self, literal):
+        for ((w_l_1, w_l_2), clause_id, is_original_clause) in self.__my_iteration_original_and_learned_watched_literals(literal):
+            # Remove from unit_clause_list and contradiction_clause_list
+            # Original CNF
+            if (is_original_clause):
+                if (clause_id in self.__contradiction_clause_list):
+                    self.__contradiction_clause_list.remove(clause_id)
+
+                if (clause_id in self.__unit_clause_list):
+                    self.__unit_clause_list.remove(clause_id)
+            # Learned clauses
+            else:
+                if (clause_id in self.__contradiction_learned_clause_list):
+                    self.__contradiction_learned_clause_list.remove(clause_id)
+
+                if (clause_id in self.__unit_learned_clause_list):
+                    self.__unit_learned_clause_list.remove(clause_id)
+
+            is_w_l_1_defined = w_l_1 not in self.__undefined_literals_hashset
+            is_w_l_2_defined = w_l_2 not in self.__undefined_literals_hashset
+
+            # Both watched literals are undefined
+            if ((not is_w_l_1_defined) and (not is_w_l_2_defined)):
+                continue
+
+            is_w_l_1_satisfied = w_l_1 in self.__partial_assignment_only_literals_hashset
+            is_w_l_2_satisfied = w_l_2 in self.__partial_assignment_only_literals_hashset
+
+            # At least one watched literal is satisfied
+            if (is_w_l_1_satisfied or is_w_l_2_satisfied):
+                continue
+
+            # Clause contains only one literal which is not satisfied => contradiction
+            if (((w_l_1 is None) and (is_w_l_2_defined)) or ((w_l_2 is None) and (is_w_l_1_defined))):
+                if (is_original_clause):
+                    self.__contradiction_clause_list.append(clause_id)
+                else:
+                    self.__contradiction_learned_clause_list.append(clause_id)
+
+            # Contradiction
+            if (is_w_l_1_defined and is_w_l_2_defined):
+                if (is_original_clause):
+                    self.__contradiction_clause_list.append(clause_id)
+                else:
+                    self.__contradiction_learned_clause_list.append(clause_id)
+
+            # First watched literal is undefined, the second one is unsatisfied
+            # Second watched literal is undefined, the first one is unsatisfied
+            if (not is_w_l_1_defined or not is_w_l_2_defined):
+                if (is_original_clause):
+                    self.__unit_clause_list.append(clause_id)
+                else:
+                    self.__unit_learned_clause_list.append(clause_id)
 
     def __is_clause_satisfied(self, clause_id):
         clause = self.__cnf[clause_id]
@@ -888,19 +908,26 @@ class CNF:
     def __increment_number_of_checked_clauses(self, number = 1):
         self.__number_of_checked_clauses += number
 
-    def __my_iteration_original_and_learned_wtached_literals(self):
+    def __my_iteration_original_and_learned_watched_literals(self, literal):
         """
         Return ((w_l_1, w_l_2), clause_id, isOriginal), where w_l_1 and w_l_2 are watched literals, isOriginal is True if it is not a learned clause, otherwise False
         """
 
-        for (i, x) in enumerate(self.__clause_watched_literals_list):
-            yield (x, i, True)
+        variable = abs(literal)
+
+        # Original CNF
+        for clause_id in self.__variable_watched_literals_dictionary[variable][0]:
+            yield (self.__clause_watched_literals_list[clause_id], clause_id, True)
+        for clause_id in self.__variable_watched_literals_dictionary[variable][1]:
+            yield (self.__clause_watched_literals_list[clause_id], clause_id, True)
 
         if (not self.__use_learned_clauses):
             return
 
-        for (i, x) in enumerate(self.__learned_clause_watched_literals_list):
-            yield (x, i, False)
+        for learned_clause_id in self.__variable_watched_literals_learned_clause_dictionary[variable][0]:
+            yield (self.__learned_clause_watched_literals_list[learned_clause_id], learned_clause_id, False)
+        for learned_clause_id in self.__variable_watched_literals_learned_clause_dictionary[variable][1]:
+            yield (self.__learned_clause_watched_literals_list[learned_clause_id], learned_clause_id, False)
 
     # Decision level
     def increment_current_decision_level(self, number = 1):
@@ -1025,8 +1052,12 @@ class CNF:
         learned_clauses_to_delete_list = sorted(learned_clauses_to_delete_list)
         learned_clauses_to_delete_hashset = set()
 
-        for i in learned_clauses_to_delete_list:
-            learned_clauses_to_delete_hashset.add(i)
+        for learned_clause_id in learned_clauses_to_delete_list:
+            learned_clauses_to_delete_hashset.add(learned_clause_id)
+            if (learned_clause_id in self.__contradiction_learned_clause_list):
+                self.__contradiction_learned_clause_list.remove(learned_clause_id)
+            if (learned_clause_id in self.__unit_learned_clause_list):
+                self.__unit_learned_clause_list.remove(learned_clause_id)
 
         temp_list = []
         for i in range(self.__number_of_learned_clauses):
@@ -1039,6 +1070,20 @@ class CNF:
         for i in range(len(temp_list)):
             map_old_to_new_dictionary[temp_list[i]] = i
             map_new_to_old_dictionary[i] = temp_list[i]
+
+        # contradiction_learned_clause_list
+        temp_contradiction_learned_clause_list = []
+        for learned_clause_id in self.__contradiction_learned_clause_list:
+            new_index = map_old_to_new_dictionary[learned_clause_id]
+            temp_contradiction_learned_clause_list.append(new_index)
+        self.__contradiction_learned_clause_list = temp_contradiction_learned_clause_list
+
+        # unit_learned_clause_list
+        temp_unit_learned_clause_list = []
+        for learned_clause_id in self.__unit_learned_clause_list:
+            new_index = map_old_to_new_dictionary[learned_clause_id]
+            temp_unit_learned_clause_list.append(new_index)
+        self.__unit_learned_clause_list = temp_unit_learned_clause_list
 
         # Learned clauses
         # learned_clauses and number_of_learned_clauses
@@ -1575,10 +1620,10 @@ class CNF:
             for (i, learned_clause) in enumerate(self.__learned_clauses):
                 self.__counter_learned_clause_list[i] = len(learned_clause)
 
-            self.__unit_clause_list = []
-            self.__contradiction_clause_list = []
-            self.__unit_learned_clause_list = []
-            self.__contradiction_learned_clause_list = []
+        self.__unit_clause_list = []
+        self.__contradiction_clause_list = []
+        self.__unit_learned_clause_list = []
+        self.__contradiction_learned_clause_list = []
 
         # Jeroslow-Wang
         if (self.__is_Jeroslow_Wang_decision_variable_heuristic()):
