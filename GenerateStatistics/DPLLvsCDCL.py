@@ -22,7 +22,7 @@ from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 path = os.path.join(os.path.dirname(__file__), '../CNF')
 dictionary_list = ["20-91", "50-218", "75-325", "100-430"]
 x_axis_variables = [20, 50, 75, 100]
-count_list = [1024, 128, 16, 8]
+count_list = [1024, 128, 32, 16]
 
 log_dpll = []
 log_cdcl = []

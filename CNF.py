@@ -560,8 +560,14 @@ class CNF:
                 self.__number_of_unit_propagations += 1
                 self.add_literal_to_partial_assignment(l)
 
+                # Original CNF - contradiction
                 if (len(self.__contradiction_clause_list) != 0):
                     temp_contradiction = (self.__contradiction_clause_list[0], True)
+
+                # Learned clauses - contradiction
+                if (self.__use_learned_clauses):
+                    if (len(self.__contradiction_learned_clause_list) != 0):
+                        temp_contradiction = (self.__contradiction_learned_clause_list[0], False)
 
             # Learned clauses
             while (self.__use_learned_clauses and self.__unit_learned_clause_list and (temp_contradiction is None)):
