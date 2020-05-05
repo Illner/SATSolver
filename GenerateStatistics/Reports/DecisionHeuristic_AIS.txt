@@ -1,0 +1,524 @@
+0
+- 0
+ais6.cnf
+SAT
+Time: 0.050520896911621094
+Number of decisions: 56
+Number of steps of unit propagation: 557
+Number of checked clauses: 4534
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 34
+Number of contradictions caused by learned clauses: 3
+Number of unit propagations: 557
+Number of unit propagations caused by learned clauses: 43
+Number of restarts: 0
+
+Time: 0.020197153091430664
+Number of decisions: 35
+Number of steps of unit propagation: 370
+Number of checked clauses: 2637
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 15
+Number of contradictions caused by learned clauses: 0
+Number of unit propagations: 370
+Number of unit propagations caused by learned clauses: 16
+Number of restarts: 0
+
+Time: 0.0222017765045166
+Number of decisions: 35
+Number of steps of unit propagation: 370
+Number of checked clauses: 2637
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 15
+Number of contradictions caused by learned clauses: 0
+Number of unit propagations: 370
+Number of unit propagations caused by learned clauses: 16
+Number of restarts: 0
+
+Time: 0.020188331604003906
+Number of decisions: 30
+Number of steps of unit propagation: 271
+Number of checked clauses: 1900
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 10
+Number of contradictions caused by learned clauses: 0
+Number of unit propagations: 271
+Number of unit propagations caused by learned clauses: 10
+Number of restarts: 0
+
+Time: 0.010075807571411133
+Number of decisions: 28
+Number of steps of unit propagation: 249
+Number of checked clauses: 1778
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 9
+Number of contradictions caused by learned clauses: 0
+Number of unit propagations: 249
+Number of unit propagations caused by learned clauses: 9
+Number of restarts: 0
+
+Time: 0.012109518051147461
+Number of decisions: 30
+Number of steps of unit propagation: 271
+Number of checked clauses: 1903
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 10
+Number of contradictions caused by learned clauses: 0
+Number of unit propagations: 271
+Number of unit propagations caused by learned clauses: 10
+Number of restarts: 0
+Number of decay: 0
+
+Time: 0.020277023315429688
+Number of decisions: 30
+Number of steps of unit propagation: 271
+Number of checked clauses: 1903
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 10
+Number of contradictions caused by learned clauses: 0
+Number of unit propagations: 271
+Number of unit propagations caused by learned clauses: 10
+Number of restarts: 0
+Number of decay: 10
+- 1
+ais8.cnf
+SAT
+Time: 1.0296955108642578
+Number of decisions: 811
+Number of steps of unit propagation: 10146
+Number of checked clauses: 115867
+Number of deleted learned clauses: 261
+Number of clause deletions: 3
+Number of contradictions: 476
+Number of contradictions caused by learned clauses: 128
+Number of unit propagations: 10146
+Number of unit propagations caused by learned clauses: 784
+Number of restarts: 3
+
+Time: 0.5262901782989502
+Number of decisions: 346
+Number of steps of unit propagation: 5701
+Number of checked clauses: 54040
+Number of deleted learned clauses: 50
+Number of clause deletions: 1
+Number of contradictions: 186
+Number of contradictions caused by learned clauses: 31
+Number of unit propagations: 5701
+Number of unit propagations caused by learned clauses: 204
+Number of restarts: 1
+
+Time: 0.5448095798492432
+Number of decisions: 346
+Number of steps of unit propagation: 5701
+Number of checked clauses: 54040
+Number of deleted learned clauses: 50
+Number of clause deletions: 1
+Number of contradictions: 186
+Number of contradictions caused by learned clauses: 31
+Number of unit propagations: 5701
+Number of unit propagations caused by learned clauses: 204
+Number of restarts: 1
+
+Time: 0.13126540184020996
+Number of decisions: 85
+Number of steps of unit propagation: 1640
+Number of checked clauses: 12932
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 48
+Number of contradictions caused by learned clauses: 1
+Number of unit propagations: 1640
+Number of unit propagations caused by learned clauses: 49
+Number of restarts: 0
+
+Time: 0.302753210067749
+Number of decisions: 208
+Number of steps of unit propagation: 3434
+Number of checked clauses: 29621
+Number of deleted learned clauses: 50
+Number of clause deletions: 1
+Number of contradictions: 114
+Number of contradictions caused by learned clauses: 4
+Number of unit propagations: 3434
+Number of unit propagations caused by learned clauses: 137
+Number of restarts: 1
+
+Time: 0.12094306945800781
+Number of decisions: 89
+Number of steps of unit propagation: 1526
+Number of checked clauses: 11876
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 47
+Number of contradictions caused by learned clauses: 2
+Number of unit propagations: 1526
+Number of unit propagations caused by learned clauses: 48
+Number of restarts: 0
+Number of decay: 0
+
+Time: 0.18357419967651367
+Number of decisions: 104
+Number of steps of unit propagation: 2209
+Number of checked clauses: 17686
+Number of deleted learned clauses: 0
+Number of clause deletions: 0
+Number of contradictions: 72
+Number of contradictions caused by learned clauses: 2
+Number of unit propagations: 2209
+Number of unit propagations caused by learned clauses: 80
+Number of restarts: 0
+Number of decay: 72
+- 2
+ais10.cnf
+SAT
+Time: 0.7531726360321045
+Number of decisions: 446
+Number of steps of unit propagation: 6923
+Number of checked clauses: 70985
+Number of deleted learned clauses: 124
+Number of clause deletions: 2
+Number of contradictions: 267
+Number of contradictions caused by learned clauses: 42
+Number of unit propagations: 6923
+Number of unit propagations caused by learned clauses: 417
+Number of restarts: 2
+
+Time: 53.02741360664368
+Number of decisions: 13742
+Number of steps of unit propagation: 304927
+Number of checked clauses: 5478575
+Number of deleted learned clauses: 5832
+Number of clause deletions: 30
+Number of contradictions: 7718
+Number of contradictions caused by learned clauses: 3478
+Number of unit propagations: 304927
+Number of unit propagations caused by learned clauses: 12729
+Number of restarts: 30
+
+Time: 53.77751445770264
+Number of decisions: 13742
+Number of steps of unit propagation: 304927
+Number of checked clauses: 5478575
+Number of deleted learned clauses: 5832
+Number of clause deletions: 30
+Number of contradictions: 7718
+Number of contradictions caused by learned clauses: 3478
+Number of unit propagations: 304927
+Number of unit propagations caused by learned clauses: 12729
+Number of restarts: 30
+
+Time: 5.434137582778931
+Number of decisions: 1431
+Number of steps of unit propagation: 42437
+Number of checked clauses: 392754
+Number of deleted learned clauses: 641
+Number of clause deletions: 6
+Number of contradictions: 874
+Number of contradictions caused by learned clauses: 85
+Number of unit propagations: 42437
+Number of unit propagations caused by learned clauses: 1075
+Number of restarts: 6
+
+Time: 0.5992510318756104
+Number of decisions: 316
+Number of steps of unit propagation: 5607
+Number of checked clauses: 49471
+Number of deleted learned clauses: 50
+Number of clause deletions: 1
+Number of contradictions: 144
+Number of contradictions caused by learned clauses: 5
+Number of unit propagations: 5607
+Number of unit propagations caused by learned clauses: 219
+Number of restarts: 1
+
+Time: 1.7060518264770508
+Number of decisions: 610
+Number of steps of unit propagation: 16304
+Number of checked clauses: 148761
+Number of deleted learned clauses: 261
+Number of clause deletions: 3
+Number of contradictions: 423
+Number of contradictions caused by learned clauses: 56
+Number of unit propagations: 16304
+Number of unit propagations caused by learned clauses: 520
+Number of restarts: 3
+Number of decay: 1
+
+Time: 0.7309775352478027
+Number of decisions: 285
+Number of steps of unit propagation: 7043
+Number of checked clauses: 65973
+Number of deleted learned clauses: 124
+Number of clause deletions: 2
+Number of contradictions: 222
+Number of contradictions caused by learned clauses: 12
+Number of unit propagations: 7043
+Number of unit propagations caused by learned clauses: 277
+Number of restarts: 2
+Number of decay: 222
+- 3
+ais12.cnf
+SAT
+Time: 2.3975484371185303
+Number of decisions: 1112
+Number of steps of unit propagation: 18978
+Number of checked clauses: 209086
+Number of deleted learned clauses: 379
+Number of clause deletions: 4
+Number of contradictions: 583
+Number of contradictions caused by learned clauses: 110
+Number of unit propagations: 18978
+Number of unit propagations caused by learned clauses: 931
+Number of restarts: 4
+
+Time: 6506.837089776993
+Number of decisions: 399738
+Number of steps of unit propagation: 10710857
+Number of checked clauses: 974611361
+Number of deleted learned clauses: 195758
+Number of clause deletions: 510
+Number of contradictions: 228986
+Number of contradictions caused by learned clauses: 158277
+Number of unit propagations: 10710857
+Number of unit propagations caused by learned clauses: 481235
+Number of restarts: 510
+
+Time: 6505.956321716309
+Number of decisions: 399738
+Number of steps of unit propagation: 10710857
+Number of checked clauses: 974611361
+Number of deleted learned clauses: 195758
+Number of clause deletions: 510
+Number of contradictions: 228986
+Number of contradictions caused by learned clauses: 158277
+Number of unit propagations: 10710857
+Number of unit propagations caused by learned clauses: 481235
+Number of restarts: 510
+
+Time: 7.632676124572754
+Number of decisions: 1801
+Number of steps of unit propagation: 59028
+Number of checked clauses: 541591
+Number of deleted learned clauses: 641
+Number of clause deletions: 6
+Number of contradictions: 963
+Number of contradictions caused by learned clauses: 98
+Number of unit propagations: 59028
+Number of unit propagations caused by learned clauses: 1250
+Number of restarts: 6
+
+Time: 13.578227281570435
+Number of decisions: 3502
+Number of steps of unit propagation: 100478
+Number of checked clauses: 982204
+Number of deleted learned clauses: 1419
+Number of clause deletions: 10
+Number of contradictions: 1645
+Number of contradictions caused by learned clauses: 315
+Number of unit propagations: 100478
+Number of unit propagations caused by learned clauses: 3076
+Number of restarts: 10
+
+Time: 10.910390615463257
+Number of decisions: 2485
+Number of steps of unit propagation: 83497
+Number of checked clauses: 889678
+Number of deleted learned clauses: 1829
+Number of clause deletions: 13
+Number of contradictions: 2071
+Number of contradictions caused by learned clauses: 445
+Number of unit propagations: 83497
+Number of unit propagations caused by learned clauses: 2991
+Number of restarts: 13
+Number of decay: 8
+
+Time: 61.791244983673096
+Number of decisions: 11597
+Number of steps of unit propagation: 414394
+Number of checked clauses: 5209735
+Number of deleted learned clauses: 9798
+Number of clause deletions: 44
+Number of contradictions: 10368
+Number of contradictions caused by learned clauses: 2906
+Number of unit propagations: 414394
+Number of unit propagations caused by learned clauses: 18327
+Number of restarts: 44
+Number of decay: 10368
+Random
+Time:
+[1.0577343702316284]
+Number of decisions:
+[606.25]
+Number of steps of unit propagation:
+[9151.0]
+Number of checked clauses:
+[100118.0]
+Number of deleted learned clauses:
+[191.0]
+Number of clause deletions:
+[2.25]
+Number of contradictions:
+[340.0]
+Number of contradictions caused by learned clauses:
+[70.75]
+Number of unit propagations:
+[9151.0]
+Number of unit propagations caused by learned clauses:
+[543.75]
+Number of restarts:
+[2.25]
+
+JeroslowWangOneSided
+Time:
+[1640.1027476787567]
+Number of decisions:
+[103465.25]
+Number of steps of unit propagation:
+[2755463.75]
+Number of checked clauses:
+[245036653.25]
+Number of deleted learned clauses:
+[50410.0]
+Number of clause deletions:
+[135.25]
+Number of contradictions:
+[59226.25]
+Number of contradictions caused by learned clauses:
+[40446.5]
+Number of unit propagations:
+[2755463.75]
+Number of unit propagations caused by learned clauses:
+[123546.0]
+Number of restarts:
+[135.25]
+
+JeroslowWangTwoSided
+Time:
+[1640.0752118825912]
+Number of decisions:
+[103465.25]
+Number of steps of unit propagation:
+[2755463.75]
+Number of checked clauses:
+[245036653.25]
+Number of deleted learned clauses:
+[50410.0]
+Number of clause deletions:
+[135.25]
+Number of contradictions:
+[59226.25]
+Number of contradictions caused by learned clauses:
+[40446.5]
+Number of unit propagations:
+[2755463.75]
+Number of unit propagations caused by learned clauses:
+[123546.0]
+Number of restarts:
+[135.25]
+
+JeroslowWangOneSidedDynamic
+Time:
+[3.3045668601989746]
+Number of decisions:
+[836.75]
+Number of steps of unit propagation:
+[25844.0]
+Number of checked clauses:
+[237294.25]
+Number of deleted learned clauses:
+[320.5]
+Number of clause deletions:
+[3.0]
+Number of contradictions:
+[473.75]
+Number of contradictions caused by learned clauses:
+[46.0]
+Number of unit propagations:
+[25844.0]
+Number of unit propagations caused by learned clauses:
+[596.0]
+Number of restarts:
+[3.0]
+
+JeroslowWangTwoSidedDynamic
+Time:
+[3.6225768327713013]
+Number of decisions:
+[1013.5]
+Number of steps of unit propagation:
+[27442.0]
+Number of checked clauses:
+[265768.5]
+Number of deleted learned clauses:
+[379.75]
+Number of clause deletions:
+[3.0]
+Number of contradictions:
+[478.0]
+Number of contradictions caused by learned clauses:
+[81.0]
+Number of unit propagations:
+[27442.0]
+Number of unit propagations caused by learned clauses:
+[860.25]
+Number of restarts:
+[3.0]
+
+VSIDS
+Time:
+[3.1873737573623657]
+Number of decisions:
+[803.5]
+Number of steps of unit propagation:
+[25399.5]
+Number of checked clauses:
+[263054.5]
+Number of deleted learned clauses:
+[522.5]
+Number of clause deletions:
+[4.0]
+Number of contradictions:
+[637.75]
+Number of contradictions caused by learned clauses:
+[125.75]
+Number of unit propagations:
+[25399.5]
+Number of unit propagations caused by learned clauses:
+[892.25]
+Number of restarts:
+[4.0]
+Number of decay:
+[2.25]
+
+eVSIDS
+Time:
+[15.68151843547821]
+Number of decisions:
+[3004.0]
+Number of steps of unit propagation:
+[105979.25]
+Number of checked clauses:
+[1323824.25]
+Number of deleted learned clauses:
+[2480.5]
+Number of clause deletions:
+[11.5]
+Number of contradictions:
+[2668.0]
+Number of contradictions caused by learned clauses:
+[730.0]
+Number of unit propagations:
+[105979.25]
+Number of unit propagations caused by learned clauses:
+[4673.5]
+Number of restarts:
+[11.5]
+Number of decay:
+[2668.0]

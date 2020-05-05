@@ -22,6 +22,7 @@ path = os.path.join(os.path.dirname(__file__), '../CNF')
 dictionary_list = ["20-91", "50-218", "75-325", "100-430", "125-538", "150-645"]
 # dictionary_list = ["20-91", "50-218", "75-325", "100-430"]
 # dictionary_list = ["JNH"]
+# dictionary_list = ["AIS"]
 
 x_axis_variables = [20, 50, 75, 100, 125, 150]
 # x_axis_variables = [20, 50, 75, 100]
@@ -30,6 +31,7 @@ x_axis_variables = [20, 50, 75, 100, 125, 150]
 count_list = [1024, 256, 128, 64, 32, 16]
 # count_list = [1024, 256, 128, 64]
 # count_list = [20]
+# count_list = [4]
 
 use_random = False
 
@@ -57,6 +59,7 @@ for i in range(len(dictionary_list)):
         print("- "  + str(j))
         file = random.choice(os.listdir(dictionary_path))
         # file = "jnh" + str(j + 1) + ".cnf"
+        # file = "ais" + str(6 + (j * 2)) + ".cnf"
         file_path = os.path.join(dictionary_path, file)
 
         print(file)
