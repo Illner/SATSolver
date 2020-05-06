@@ -322,8 +322,8 @@ plt.legend(loc="upper left")
 plt.show()
 
 # Number of checked clauses
-plt.plot(x_axis_variables, number_of_decisions_y_LubyStrategy, color="blue", label='LubyStrategy')
-plt.plot(x_axis_variables, number_of_decisions_y_GeometricStrategy, color="red", label='GeometricStrategy')
+plt.plot(x_axis_variables, number_of_checked_clauses_y_LubyStrategy, color="blue", label='LubyStrategy')
+plt.plot(x_axis_variables, number_of_checked_clauses_y_GeometricStrategy, color="red", label='GeometricStrategy')
 plt.title('Number of checked clauses')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of checked clauses')
@@ -331,8 +331,8 @@ plt.legend(loc="upper left")
 plt.show()
 
 # Number of decisions
-plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_LubyStrategy, color="blue", label='LubyStrategy')
-plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_GeometricStrategy, color="red", label='GeometricStrategy')
+plt.plot(x_axis_variables, number_of_decisions_y_LubyStrategy, color="blue", label='LubyStrategy')
+plt.plot(x_axis_variables, number_of_decisions_y_GeometricStrategy, color="red", label='GeometricStrategy')
 plt.title('Number of decisions')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of decisions')
@@ -340,8 +340,8 @@ plt.legend(loc="upper left")
 plt.show()
 
 # Number of steps of unit propagation
-plt.plot(x_axis_variables, number_of_checked_clauses_y_LubyStrategy, color="blue", label='LubyStrategy')
-plt.plot(x_axis_variables, number_of_checked_clauses_y_GeometricStrategy, color="red", label='GeometricStrategy')
+plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_LubyStrategy, color="blue", label='LubyStrategy')
+plt.plot(x_axis_variables, number_of_steps_of_unit_propagation_y_GeometricStrategy, color="red", label='GeometricStrategy')
 plt.title('Number of steps of unit propagation')
 plt.xlabel('Number of variables')
 plt.ylabel('Number of steps of unit propagation')
