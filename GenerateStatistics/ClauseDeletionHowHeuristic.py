@@ -20,8 +20,13 @@ from ClauseDeletionHeuristicEnum import ClauseDeletionWhenHeuristicEnum
 
 path = os.path.join(os.path.dirname(__file__), '../CNF')
 dictionary_list = ["20-91", "50-218", "75-325", "100-430"]
+# dictionary_list = ["AIS"]
+
 x_axis_variables = [20, 50, 75, 100]
+# x_axis_variables = [0]
+
 count_list = [1024, 256, 128, 64]
+# count_list = [4]
 
 log_RemoveSubsumedClauses_list = []
 log_KeepShortClauses_list = []
@@ -46,6 +51,7 @@ for i in range(len(dictionary_list)):
     for j in range(count_list[i]):
         print("- "  + str(j))
         file = random.choice(os.listdir(dictionary_path))
+        # file = "ais" + str(6 + (j * 2)) + ".cnf"
         file_path = os.path.join(dictionary_path, file)
 
         print(file)
