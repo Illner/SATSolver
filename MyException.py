@@ -197,6 +197,14 @@ class UndefinedClauseDeletionWhenHeuristicCnfException(Exception):
         else:
             super().__init__("Undefined clause deletion (when) heuristic: " + message)
 
+class LearnedClausesAreNeededCDCLException(Exception):
+    """
+    Learned clauses are needed
+    """
+
+    def __init__(self):
+        super().__init__("Learned clauses are needed!")
+
 class InvalidArgumentsCDCLException(Exception):
     """
     Invalid arguments - cdclAlgorithm.py
@@ -237,3 +245,41 @@ class ClauseDoesNotCauseAContradictionCnfException(Exception):
             super().__init__("Clause does not cause a contradiction!")
         else:
             super().__init__("Clause does not cause a contradiction: " + message) 
+
+class InvalidSizeOfBoardEncodeNQueensProblemException(Exception):
+    """
+    Invalid size of board
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Invalid size of board!")
+        else:
+            super().__init__("Invalid size of board: " + message) 
+
+class InvalidRowOrColumnEncodeNQueensProblemException(Exception):
+    """
+    Invalid row or column
+    """
+
+    def __init__(self, message):
+        super().__init__("Invalid row or column: " + message)
+
+class PropositionalVariableDoesNotExistEncodeNQueensProblemException(Exception):
+    """
+    Propositional variable does not exist
+    """
+
+    def __init__(self, message):
+        super().__init__("Propositional variable does not exist: " + message)
+
+class InvalidArgumentsNQueensProblemException(Exception):
+    """
+    Invalid arguments - nQueensProblem.py
+    """
+
+    def __init__(self, message = ""):
+        if (message == ""):
+            super().__init__("Invalid arguments\nnQueensProblem.py size_of_board [output_path]")
+        else: 
+            super().__init__(message)

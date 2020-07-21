@@ -24,6 +24,9 @@ class CDCL:
         self.__number_of_decisions = 0
         self.__number_of_steps_of_unit_propagation = 0
 
+        if (self.__cnf.learned_clauses is None):
+            raise MyException.LearnedClausesAreNeededCDCLException()
+
     # Method
     def CDCL(self):
         """
