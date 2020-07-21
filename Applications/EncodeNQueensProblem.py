@@ -1,6 +1,6 @@
 import copy
+import math
 import numpy as np
-from math import comb
 from io import StringIO
     
 import sys
@@ -115,8 +115,8 @@ class EncodeNQueensProblem:
             self.__new_line()
         
         # P
-        temp_list = [comb(n,2) for n in range(2, self.__size_of_board + 1)]
-        temp_sum = 2 * (2 * sum(temp_list) - comb(self.__size_of_board,2))
+        temp_list = [self.__comb(n, 2) for n in range(2, self.__size_of_board + 1)]
+        temp_sum = 2 * (2 * sum(temp_list) - self.__comb(self.__size_of_board, 2))
         self.__number_of_clauses = self.__size_of_board + self.__size_of_board + self.__size_of_board * (self.__size_of_board * (self.__size_of_board + 1) - 2 * self.__size_of_board) + temp_sum
 
         self.__write("p cnf {0} {1}".format(self.__number_of_propositional_variables, self.__number_of_clauses))
@@ -165,6 +165,12 @@ class EncodeNQueensProblem:
                 for j in range(i + 1, len(diagonal)):
                     self.__write("-{0} -{1} 0".format(diagonal[i], diagonal[j]))
                     self.__new_line()
+
+    def __comb(self, n, k):
+        if n < k:
+            return 0
+        
+        return int((math.factorial(n)) / (math.factorial(k) * math.factorial(n - k)))
 
     def __write(self, string):
         self.__DIMACS_format.write(string)
