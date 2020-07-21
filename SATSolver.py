@@ -31,7 +31,7 @@ max = 20
 file = False
 iteration = 2
 max_myCDCL = 10
-folder_path = r"D:\Storage\OneDrive\Škola\Vysoká škola\UK\Rozhodovací procedury a verifikace (NAIL094)\Cvičení\SATSolver\CNF\nQueensProblem"
+folder_path = r"D:\Storage\OneDrive\Škola\Vysoká škola\UK\Rozhodovací procedury a verifikace (NAIL094)\Cvičení\Úkoly\task1\nQueensProblem"
 
 x = [x for x in range(min, max + 1)]
 x_myCDCL = [x for x in range(min, max_myCDCL + 1)]
