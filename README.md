@@ -67,3 +67,10 @@ A heuristic for regularly deleting some of the learned clauses:
 7 - VSIDS
 
 8 - eVSIDS (**DEFAULT**)
+
+# Applications
+
+## nQueensProblem.py ##
+Model the N-queens problem as a SAT problem.
+
+nQueensProblem.py size_of_board [output_path]
