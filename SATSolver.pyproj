@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>SATSolver</Name>
     <RootNamespace>SATSolver</RootNamespace>
-    <InterpreterId>Global|PythonCore|3.7</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.8-32</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
